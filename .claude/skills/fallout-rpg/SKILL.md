@@ -1,6 +1,6 @@
 ---
 name: fallout-rpg
-description: Run, GM, or adjudicate Fallout - The Roleplaying Game (Modiphius 2d20 system). Use this skill when the user wants to play, run, or look up rules for Fallout RPG / Fallout TTRPG / the Modiphius Fallout tabletop game. Activates for skill tests (rolling 2d20 against an attribute+skill target number), S.P.E.C.I.A.L. attribute checks, Action Points (AP), Luck points, complications, critical successes, opposed and group tests, and wasteland gameplay rulings. Currently covers the core 2d20 resolution loop in detail; additional chapters (combat, character creation, perks, gear) are added to references/ over time.
+description: Run, GM, or adjudicate Fallout - The Roleplaying Game (Modiphius 2d20 system). Use this skill when the user wants to play, run, or look up rules for Fallout RPG / Fallout TTRPG / the Modiphius Fallout tabletop game. Activates for skill tests (rolling 2d20 against an attribute+skill target number), S.P.E.C.I.A.L. attribute checks, Action Points (AP), Luck points, complications, critical successes, opposed and group tests, combat (initiative, minor/major actions, attacks, hit locations, range, Combat Dice, damage effects, injuries, dying, healing, cover, zones, hazards, traps), and wasteland gameplay rulings. Currently covers the core 2d20 resolution loop and full combat chapter; additional chapters (character creation, perks, gear) are added to references/ over time.
 compatibility: Bundled dice script requires Python 3. The skill itself works in any text-only context.
 metadata:
   source: "Fallout - The Roleplaying Game (Modiphius Entertainment), quickstart and full rulebook"
@@ -19,9 +19,10 @@ This skill teaches an agent to GM or adjudicate *Fallout: The Roleplaying Game*.
 - **`references/test-variants.md`**: opposed, group, and assisted tests; complication range; success at a cost; difficulty zero.
 - **`references/action-points.md`**: full AP economy - group pool, GM pool, buying d20s with or without AP, AP in combat.
 - **`references/luck.md`**: the four Luck options, regaining Luck.
+- **`references/combat.md`**: Chapter Two — the full combat loop (rounds, initiative, minor/major actions, attacks, hit locations, range, Combat Dice, damage effects, injuries and dying, healing, environment, cover, hazards, traps).
 - **`scripts/roll_test.py`**: deterministic dice roller that applies the rules below correctly.
 
-More chapters (combat, character creation, perks, gear, adventures) will be added as additional reference files.
+More chapters (character creation, perks, gear, adventures) will be added as additional reference files.
 
 ## Read this first - gotchas
 
@@ -108,6 +109,7 @@ Load `references/luck.md` for the full description of each option, including whe
 | `references/test-variants.md` | A test is opposed (PC vs PC, PC vs NPC), one PC is helping another, the whole group is doing one activity together, the test is risky enough to extend the complication range, or the GM is considering "success at a cost" on a failed roll |
 | `references/action-points.md` | Players want to spend AP in unusual ways, AP economy questions come up, the GM needs the combat AP spends, or the group pool has run out and a player wants to "fund the GM" to buy d20s |
 | `references/luck.md` | A player invokes any Luck option, asks how Luck refreshes, or proposes a scene-altering detail that the GM might charge Luck for |
+| `references/combat.md` | Combat begins, or any combat-specific question comes up: initiative, minor/major actions, making an attack, hit locations, range bands, Combat Dice and damage effects, critical hits and injuries, dying and stabilization, healing (in and out of combat), zones, cover, difficult terrain, environmental conditions, hazards, or traps |
 | `references/setup.md` | A new group is preparing a session and needs to know what dice, tokens, and prep are required |
 
 ## Bundled scripts
