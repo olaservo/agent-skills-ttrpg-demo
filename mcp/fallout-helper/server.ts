@@ -85,6 +85,11 @@ export function createServer(): McpServer {
     },
     async (args): Promise<CallToolResult> => {
       const result = rollTest(args);
+      // Per MCP Apps spec (apps.mdx §1697): `content` enters the model's
+      // conversation context; `structuredContent` is delivered only to the
+      // UI iframe. Anything the agent needs to reason about must be in
+      // `content`. The UI consumes `structuredContent` directly to drive
+      // the dice animation and per-die tag classes.
       return {
         content: [{ type: "text", text: formatHuman(result) }],
         structuredContent: result as unknown as { [key: string]: unknown },
