@@ -20,7 +20,7 @@ This skill teaches an agent to GM or adjudicate *Fallout: The Roleplaying Game*.
 - **`references/action-points.md`**: full AP economy - group pool, GM pool, buying d20s with or without AP, AP in combat.
 - **`references/luck.md`**: the four Luck options, regaining Luck.
 - **`references/combat.md`**: Chapter Two — the full combat loop (rounds, initiative, minor/major actions, attacks, hit locations, range, Combat Dice, damage effects, injuries and dying, healing, environment, cover, hazards, traps).
-- **`fallout-helper` MCP server** (in this repo at `mcp/fallout-helper/`): provides the `roll_dice` tool that applies the rules below correctly, with a Pip-Boy-themed animated UI for the result. Replaces the older Python `roll_test.py` script.
+- **`fallout-helper` MCP server** (in this repo at `mcp/fallout-helper/`): provides the `roll_dice` tool (Pip-Boy-themed animated UI) and the `present_player_choice` tool (host-rendered structured picker for story decisions). Replaces the older Python `roll_test.py` script.
 
 More chapters (character creation, perks, gear, adventures) will be added as additional reference files.
 
@@ -136,5 +136,40 @@ Example calls (the agent issues these via the tool, not as shell commands):
 The tool returns each d20 result with per-die tags (`success`, `miss`, `critical`, `complication` — non-exclusive), totals successes, declares pass/fail, and reports AP generated (raw excess; the agent enforces the group pool cap of 6). It also drives a linked Pip-Boy UI resource so the host can render the rolling animation. The tool does not consult the GM about which attribute + skill applies — that judgment stays with the human.
 
 The companion `show_character_sheet` tool renders a placeholder character sheet UI; the full character data model is intentionally TODO and will land in a follow-up.
+
+### Asking the player to commit to a choice — `present_player_choice`
+
+When the adventure reaches a *meaningful* narrative branch — multiple distinct paths, none of them mechanically forced — call `present_player_choice` with the curated options. The host renders a structured picker and **blocks until the player answers**, then returns their choice as structured data the agent can branch on.
+
+`present_player_choice` arguments:
+
+| Arg | Type | Default | Meaning |
+|---|---|---|---|
+| `prompt` | string | required | Narrative framing shown to the player (e.g. "Pierce and Macey are pinned. How do you approach the bunker?") |
+| `options` | array of `{id, label, description?}` | required | 2–6 mutually-exclusive options; `id` is a stable short key, `label` is what the player sees |
+| `allowFreeText` | boolean | `true` | Adds an optional free-text field so the player can elaborate or propose something off-menu |
+
+The tool returns `{ action, chosenId?, chosenLabel?, elaboration? }`:
+- `action: "accept"` — player picked an option; branch on `chosenId`. If `elaboration` is set, weave it into the narration.
+- `action: "decline"` or `"cancel"` — don't railroad. Narrate a beat that gives the player space (questions, breathing room), then offer a refined choice.
+
+**Use it for:** story branch points where the agent should *not* pick for the player — sneak vs. parley vs. assault; trust an NPC vs. interrogate vs. walk away; which signal source to investigate first; whether to interrupt Trestridge's brain transfer or wait. Aim for 2–4 options with one-line descriptions of the consequence or feel.
+
+**Don't use it for:** mechanical outcomes (those are skill tests via `roll_dice`), pure flavor beats (just narrate), or fully open prompts like "what do you do?" (ask inline; the player has unlimited solution space, and a structured form would just shrink it).
+
+Example call:
+
+```
+present_player_choice({
+  prompt: "Pierce and Macey are pinned in front of the bunker. How do you approach?",
+  options: [
+    { id: "sneak",   label: "Sneak past the robots", description: "AGL + Sneak difficulty 4. Get inside before they engage." },
+    { id: "parley",  label: "Hail Pierce and Macey", description: "Coordinate with the Brotherhood knights first." },
+    { id: "assault", label: "Charge in",             description: "Pick a target and open fire — the knights will follow your lead." },
+  ],
+})
+```
+
+If the connected client doesn't support MCP elicitation, the tool returns `isError: true` with a message saying so — fall back to asking the player inline in chat.
 
 If the `fallout-helper` MCP server is not connected, ask the user to start it (see `mcp/fallout-helper/README.md` for client config) — do not invent rolls.

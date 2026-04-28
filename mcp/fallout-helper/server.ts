@@ -97,6 +97,150 @@ export function createServer(): McpServer {
     },
   );
 
+  // ── Tool: present_player_choice ────────────────────────────────────────
+  // No UI iframe: elicitation forms are rendered by the *client*. So we
+  // register with the plain McpServer API rather than registerAppTool
+  // (which mandates a `_meta.ui.resourceUri` pointing at a UI resource).
+  server.registerTool(
+    "present_player_choice",
+    {
+      title: "Ask the Player to Choose",
+      description:
+        "Pause the game and surface a story decision to the human player as a structured " +
+        "form. The host renders the options and blocks until the player picks one. Use this " +
+        "at meaningful narrative branches (e.g. sneak vs. parley vs. assault) — not for " +
+        "mechanical outcomes (those are skill tests via roll_dice), pure flavor beats, or " +
+        "fully open 'what do you do?' prompts.",
+      inputSchema: {
+        prompt: z
+          .string()
+          .min(1)
+          .describe(
+            "Narrative framing shown to the player, e.g. 'Pierce and Macey are pinned. How do you approach the bunker?'",
+          ),
+        options: z
+          .array(
+            z.object({
+              id: z.string().min(1).describe("Stable short id, e.g. 'sneak'."),
+              label: z.string().min(1).describe("Human-readable label shown in the picker."),
+              description: z
+                .string()
+                .optional()
+                .describe("One-line elaboration of the option's consequences or feel."),
+            }),
+          )
+          .min(2)
+          .max(6)
+          .describe("2–6 mutually-exclusive options for the player to choose from."),
+        allowFreeText: z
+          .boolean()
+          .default(true)
+          .describe(
+            "If true, the form includes an optional free-text field so the player can elaborate or propose something off-menu.",
+          ),
+      },
+      outputSchema: {
+        action: z.enum(["accept", "decline", "cancel"]),
+        chosenId: z.string().optional(),
+        chosenLabel: z.string().optional(),
+        elaboration: z.string().optional(),
+      },
+    },
+    async (args): Promise<CallToolResult> => {
+      const { prompt, options, allowFreeText } = args;
+
+      // Reject duplicate ids early — enum values must be unique.
+      const ids = options.map((o) => o.id);
+      if (new Set(ids).size !== ids.length) {
+        return {
+          content: [
+            { type: "text", text: "present_player_choice: option ids must be unique." },
+          ],
+          isError: true,
+        };
+      }
+
+      const optionsList = options
+        .map((o) => `• ${o.label}${o.description ? ` — ${o.description}` : ""}`)
+        .join("\n");
+      const message = `${prompt}\n\nOptions:\n${optionsList}`;
+
+      const choiceSchema = {
+        type: "string" as const,
+        title: "Your choice",
+        enum: ids,
+        enumNames: options.map((o) => o.label),
+      };
+      const elaborationSchema = {
+        type: "string" as const,
+        title: "Anything to add? (optional)",
+        description: "Free-form elaboration, or propose something off-menu.",
+      };
+
+      try {
+        const result = await server.server.elicitInput({
+          message,
+          requestedSchema: {
+            type: "object",
+            properties: allowFreeText
+              ? { choice: choiceSchema, elaboration: elaborationSchema }
+              : { choice: choiceSchema },
+            required: ["choice"],
+          },
+        });
+
+        if (result.action === "accept" && result.content) {
+          const chosenId = result.content.choice as string;
+          const chosenOption = options.find((o) => o.id === chosenId);
+          const chosenLabel = chosenOption?.label ?? chosenId;
+          const elaboration =
+            typeof result.content.elaboration === "string" && result.content.elaboration.length > 0
+              ? result.content.elaboration
+              : undefined;
+
+          const text = elaboration
+            ? `Player chose: ${chosenLabel}\n\nElaboration: ${elaboration}`
+            : `Player chose: ${chosenLabel}`;
+
+          return {
+            content: [{ type: "text", text }],
+            structuredContent: {
+              action: "accept",
+              chosenId,
+              chosenLabel,
+              ...(elaboration ? { elaboration } : {}),
+            },
+          };
+        }
+
+        // decline or cancel — no content
+        const text =
+          result.action === "decline"
+            ? "Player declined to commit to one of the options. Don't railroad — narrate a beat that gives them space, then offer a refined choice."
+            : "Player dismissed the choice. Don't railroad — revisit the moment with the player.";
+        return {
+          content: [{ type: "text", text }],
+          structuredContent: { action: result.action },
+        };
+      } catch (error) {
+        // Most likely cause: the connected client doesn't advertise the
+        // `elicitation` capability. Fall back to inline questioning.
+        const msg = error instanceof Error ? error.message : String(error);
+        return {
+          content: [
+            {
+              type: "text",
+              text:
+                `present_player_choice failed (${msg}). The connected client may not support ` +
+                `MCP elicitation. Ask the player inline in chat instead, listing the options.`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+  );
+
   // ── Tool: show_character_sheet ─────────────────────────────────────────
   registerAppTool(
     server,
