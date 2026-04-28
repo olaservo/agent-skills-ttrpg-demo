@@ -1,0 +1,13 @@
+/src/
+/dice/
+/dice-roll.html
+/character-sheet.html
+vite.config.ts
+tsconfig.json
+tsconfig.server.json
+main.ts
+server.ts
+/.claude/
+/.github/
+/README.md
+*.mcpb

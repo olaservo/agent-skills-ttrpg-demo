@@ -1,0 +1,42 @@
+{
+  "manifest_version": "0.3",
+  "name": "fallout-helper-mcp",
+  "display_name": "Fallout TTRPG Helper",
+  "version": "0.1.0",
+  "description": "MCP App server for Fallout: The Roleplaying Game (Modiphius 2d20). Server-side dice resolver with a Pip-Boy-themed animated UI, plus a character-sheet UI resource. Not affiliated with or endorsed by Bethesda or Modiphius.",
+  "author": {
+    "name": "olaservo",
+    "url": "https://github.com/olaservo"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/olaservo/agent-skills-ttrpg-demo"
+  },
+  "icon": "icon.png",
+  "server": {
+    "type": "node",
+    "entry_point": "dist/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/dist/index.js", "--stdio"]
+    }
+  },
+  "tools": [
+    {
+      "name": "roll_dice",
+      "description": "Roll a Fallout 2d20 skill test (target, difficulty, AP, complications) and render the result in an animated Pip-Boy dice UI."
+    },
+    {
+      "name": "show_character_sheet",
+      "description": "Open the character sheet UI resource (placeholder; data model TODO)."
+    }
+  ],
+  "keywords": ["fallout", "ttrpg", "modiphius", "2d20", "dice", "rpg"],
+  "license": "MIT",
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
+  }
+}
