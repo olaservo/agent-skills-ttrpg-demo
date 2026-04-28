@@ -1,0 +1,205 @@
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.85em;
+  color: var(--pb-fg-dim);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.meta .dot {
+  opacity: 0.6;
+}
+
+.meta .meta-comp {
+  color: var(--pb-comp);
+}
+
+.dice-tray {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 0.75rem;
+  padding: 1rem 0;
+}
+
+.die {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--pb-fg-dim);
+  border-radius: var(--pb-radius);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(124, 255, 160, 0.04);
+  transition: border-color 120ms linear, box-shadow 200ms linear, color 200ms linear;
+}
+
+.die .face {
+  font-size: 2.5rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.die .chip {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  right: 6px;
+  font-size: 0.65rem;
+  text-align: center;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 200ms linear 200ms;
+}
+
+.die.tumbling .face {
+  animation: jitter 80ms steps(2, end) infinite;
+  color: var(--pb-fg-dim);
+}
+
+.die.tumbling {
+  border-color: var(--pb-fg);
+}
+
+@keyframes jitter {
+  0%   { transform: translate(0, 0); }
+  50%  { transform: translate(0, -1px); }
+  100% { transform: translate(0, 0); }
+}
+
+.die.success {
+  color: var(--pb-fg);
+  border-color: var(--pb-fg);
+  box-shadow: 0 0 12px rgba(124, 255, 160, 0.55);
+}
+
+.die.success .chip {
+  color: var(--pb-fg);
+  opacity: 1;
+}
+
+.die.miss {
+  color: var(--pb-fg-dim);
+  border-color: var(--pb-fg-dim);
+  box-shadow: none;
+}
+
+.die.miss .chip {
+  color: var(--pb-fg-dim);
+  opacity: 1;
+}
+
+.die.critical {
+  color: var(--pb-vault);
+  border-color: var(--pb-vault);
+  box-shadow: 0 0 18px rgba(255, 228, 94, 0.7);
+  animation: critical-pulse 1.2s ease-in-out infinite;
+}
+
+.die.critical .chip {
+  color: var(--pb-vault);
+  opacity: 1;
+  font-weight: bold;
+}
+
+@keyframes critical-pulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(255, 228, 94, 0.45); }
+  50%      { box-shadow: 0 0 22px rgba(255, 228, 94, 0.95); }
+}
+
+/* Complication is layered: still shows base success/miss class, with red border + chip overlay */
+.die.complication {
+  border-color: var(--pb-comp);
+  box-shadow: 0 0 16px rgba(255, 92, 92, 0.65);
+  animation: comp-flash 1.6s ease-in-out infinite;
+}
+
+.die.complication .chip-comp {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 0.6rem;
+  font-weight: bold;
+  color: var(--pb-comp);
+  letter-spacing: 0.1em;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  padding: 1px 4px;
+  background: rgba(13, 31, 13, 0.85);
+}
+
+@keyframes comp-flash {
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 92, 92, 0.4); }
+  50%      { box-shadow: 0 0 22px rgba(255, 92, 92, 0.95); }
+}
+
+.die.critical.complication {
+  /* When a die is somehow both (target=20, range=5, roll=1 — actually impossible
+     since 1 < 16; but kept for safety) prefer critical visuals. */
+  animation: critical-pulse 1.2s ease-in-out infinite;
+}
+
+/* Summary panel */
+.summary {
+  border-top: 1px solid var(--pb-fg-dim);
+  border-bottom: 1px solid var(--pb-fg-dim);
+  padding: 0.75rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity 350ms ease-in;
+}
+
+.summary.visible {
+  opacity: 1;
+}
+
+.summary .line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  letter-spacing: 0.05em;
+}
+
+.summary .label {
+  text-transform: uppercase;
+  color: var(--pb-fg-dim);
+  font-size: 0.85em;
+}
+
+.summary .val {
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+.summary .outcome-line {
+  justify-content: center;
+  padding: 0.5rem 0;
+}
+
+.summary .outcome {
+  font-weight: bold;
+  font-size: 1.4em;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.summary .outcome.pass {
+  color: var(--pb-fg);
+}
+
+.summary .outcome.fail {
+  color: var(--pb-fail);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+}

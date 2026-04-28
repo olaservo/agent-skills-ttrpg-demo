@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>Vault-Tec Roll Terminal</title>
+</head>
+<body>
+  <main class="pipboy" id="pipboy">
+    <header class="crt-header">
+      <span class="vault-tec">VAULT-TEC ROLL TERMINAL</span>
+      <span class="status" id="status">STANDBY</span>
+    </header>
+
+    <section class="meta" id="meta" hidden>
+      <span id="meta-pool"></span>
+      <span class="dot">·</span>
+      <span id="meta-target"></span>
+      <span class="dot">·</span>
+      <span id="meta-difficulty"></span>
+      <span class="dot meta-comp" hidden id="meta-comp-dot">·</span>
+      <span id="meta-comp" hidden></span>
+    </section>
+
+    <section class="dice-tray" id="dice-tray" aria-live="polite"></section>
+
+    <section class="summary" id="summary" hidden>
+      <div class="line"><span class="label">SUCCESSES</span><span class="val" id="successes">0</span></div>
+      <div class="line"><span class="label">CRITICALS</span><span class="val" id="crits">0</span></div>
+      <div class="line"><span class="label">COMPLICATIONS</span><span class="val" id="complications">0</span></div>
+      <div class="line outcome-line"><span class="outcome" id="outcome">…</span></div>
+      <div class="line ap"><span class="label">AP GAINED</span><span class="val" id="ap">0</span></div>
+    </section>
+
+    <footer class="actions">
+      <button id="reroll" class="btn" disabled>RE-ROLL</button>
+    </footer>
+  </main>
+
+  <script type="module" src="/src/dice-app.ts"></script>
+</body>
+</html>

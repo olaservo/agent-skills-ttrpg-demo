@@ -1,0 +1,99 @@
+:root {
+  --pb-bg: #0d1f0d;
+  --pb-fg: #7cffa0;
+  --pb-fg-dim: #4a9c63;
+  --pb-vault: #ffe45e;
+  --pb-comp: #ff5c5c;
+  --pb-fail: #ff5c5c;
+  --pb-glow: 0 0 4px currentColor;
+  --pb-pad: 1rem;
+  --pb-radius: 4px;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: var(--pb-bg);
+  color: var(--pb-fg);
+  font-family: ui-monospace, "SFMono-Regular", "Cascadia Mono", "Courier New", monospace;
+  text-shadow: var(--pb-glow);
+}
+
+body::before {
+  /* Subtle scanline overlay */
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(124, 255, 160, 0) 0px,
+    rgba(124, 255, 160, 0) 2px,
+    rgba(124, 255, 160, 0.06) 3px,
+    rgba(124, 255, 160, 0) 4px
+  );
+  z-index: 9999;
+  mix-blend-mode: overlay;
+}
+
+.pipboy {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--pb-pad);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.crt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1px solid var(--pb-fg-dim);
+  padding-bottom: 0.5rem;
+  font-weight: bold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.vault-tec {
+  color: var(--pb-vault);
+}
+
+.status {
+  font-size: 0.85em;
+  color: var(--pb-fg-dim);
+}
+
+.status.rolling {
+  color: var(--pb-vault);
+  animation: blink 0.6s step-end infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0.3; }
+}
+
+.btn {
+  background: transparent;
+  color: var(--pb-fg);
+  border: 1px solid currentColor;
+  border-radius: var(--pb-radius);
+  padding: 0.5rem 1rem;
+  font: inherit;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  text-shadow: var(--pb-glow);
+  transition: background 80ms linear, color 80ms linear;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--pb-fg);
+  color: var(--pb-bg);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
