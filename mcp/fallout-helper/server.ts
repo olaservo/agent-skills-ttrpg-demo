@@ -3,6 +3,11 @@ import {
   registerAppTool,
   RESOURCE_MIME_TYPE,
 } from "@modelcontextprotocol/ext-apps/server";
+import {
+  discoverSkills,
+  registerSkillResources,
+  SKILLS_EXTENSION,
+} from "@olaservo/ext-skills/server";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult, ReadResourceResult } from "@modelcontextprotocol/sdk/types.js";
 import fs from "node:fs/promises";
@@ -15,14 +20,29 @@ const DIST_DIR = import.meta.filename.endsWith(".ts")
   ? path.join(import.meta.dirname, "dist")
   : import.meta.dirname;
 
+// Skills live at mcp/fallout-helper/skills/. In dev (server.ts) that's a
+// sibling of this file; in prod (dist/server.js) it's one level up.
+const SKILLS_DIR = import.meta.filename.endsWith(".ts")
+  ? path.join(import.meta.dirname, "skills")
+  : path.join(import.meta.dirname, "..", "skills");
+
 const DICE_UI_URI = "ui://fallout-helper/dice-roll.html";
 const SHEET_UI_URI = "ui://fallout-helper/character-sheet.html";
 
 export function createServer(): McpServer {
-  const server = new McpServer({
-    name: "Fallout TTRPG Helper",
-    version: "0.1.0",
-  });
+  const server = new McpServer(
+    {
+      name: "Fallout TTRPG Helper",
+      version: "0.1.0",
+    },
+    {
+      capabilities: {
+        resources: {},
+        // SEP-2640 §Capability Declaration
+        extensions: { [SKILLS_EXTENSION]: {} },
+      },
+    },
+  );
 
   // ── Tool: roll_dice ────────────────────────────────────────────────────
   registerAppTool(
@@ -320,6 +340,13 @@ export function createServer(): McpServer {
       };
     },
   );
+
+  // ── Resources: Fallout skills (SEP-2640) ───────────────────────────────
+  // Serves fallout-rpg, fallout-machine-frequency, fallout-character-sheets
+  // from ./skills/ as skill:// resources. Also registers skill://index.json
+  // and per-skill resource templates for supporting files.
+  const skillMap = discoverSkills(SKILLS_DIR);
+  registerSkillResources(server, skillMap, SKILLS_DIR);
 
   return server;
 }
