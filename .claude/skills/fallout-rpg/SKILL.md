@@ -1,7 +1,7 @@
 ---
 name: fallout-rpg
 description: Run, GM, or adjudicate Fallout - The Roleplaying Game (Modiphius 2d20 system). Use this skill when the user wants to play, run, or look up rules for Fallout RPG / Fallout TTRPG / the Modiphius Fallout tabletop game. Activates for skill tests (rolling 2d20 against an attribute+skill target number), S.P.E.C.I.A.L. attribute checks, Action Points (AP), Luck points, complications, critical successes, opposed and group tests, combat (initiative, minor/major actions, attacks, hit locations, range, Combat Dice, damage effects, injuries, dying, healing, cover, zones, hazards, traps), and wasteland gameplay rulings. Currently covers the core 2d20 resolution loop and full combat chapter; additional chapters (character creation, perks, gear) are added to references/ over time.
-compatibility: Bundled dice script requires Python 3. The skill itself works in any text-only context.
+compatibility: Dice rolls are produced by the `fallout-helper` MCP server (TypeScript MCP App) bundled at `mcp/fallout-helper/`. The skill itself works in any text-only context, but skill tests require the MCP server to be connected — do not fall back to inline dice math.
 metadata:
   source: "Fallout - The Roleplaying Game (Modiphius Entertainment), quickstart and full rulebook"
   system: "Modiphius 2d20"
@@ -20,7 +20,7 @@ This skill teaches an agent to GM or adjudicate *Fallout: The Roleplaying Game*.
 - **`references/action-points.md`**: full AP economy - group pool, GM pool, buying d20s with or without AP, AP in combat.
 - **`references/luck.md`**: the four Luck options, regaining Luck.
 - **`references/combat.md`**: Chapter Two — the full combat loop (rounds, initiative, minor/major actions, attacks, hit locations, range, Combat Dice, damage effects, injuries and dying, healing, environment, cover, hazards, traps).
-- **`scripts/roll_test.py`**: deterministic dice roller that applies the rules below correctly.
+- **`fallout-helper` MCP server** (in this repo at `mcp/fallout-helper/`): provides the `roll_dice` tool that applies the rules below correctly, with a Pip-Boy-themed animated UI for the result. Replaces the older Python `roll_test.py` script.
 
 More chapters (character creation, perks, gear, adventures) will be added as additional reference files.
 
@@ -112,14 +112,29 @@ Load `references/luck.md` for the full description of each option, including whe
 | `references/combat.md` | Combat begins, or any combat-specific question comes up: initiative, minor/major actions, making an attack, hit locations, range bands, Combat Dice and damage effects, critical hits and injuries, dying and stabilization, healing (in and out of combat), zones, cover, difficult terrain, environmental conditions, hazards, or traps |
 | `references/setup.md` | A new group is preparing a session and needs to know what dice, tokens, and prep are required |
 
-## Bundled scripts
+## Bundled MCP tools
 
-`scripts/roll_test.py` rolls a skill test with the rules above applied correctly. Use it whenever the agent needs an actual random outcome rather than an illustrative one.
+The `fallout-helper` MCP server (source at `mcp/fallout-helper/`) exposes a `roll_dice` tool that rolls a skill test with the rules above applied correctly. Call it whenever the agent needs an actual random outcome rather than an illustrative one — do **not** fall back to inline dice math.
 
-```bash
-python scripts/roll_test.py --target 9 --difficulty 1
-python scripts/roll_test.py --target 8 --difficulty 3 --dice 4
-python scripts/roll_test.py --target 10 --difficulty 2 --complication-range 2
-```
+`roll_dice` arguments:
 
-The script prints each d20 result, flags critical successes and complications, totals successes, declares pass/fail, and reports AP generated. It does not consult the GM about which attribute + skill applies - that judgment stays with the human.
+| Arg | Type | Default | Meaning |
+|---|---|---|---|
+| `target` | int 1-20 | required | Target number = attribute + skill |
+| `difficulty` | int 0-5 | required | Number of successes needed to pass |
+| `numDice` | int 1-5 | 2 | Pool size. **1** for an assistance/group-helper roll; up to 5 once AP is spent on bonus d20s |
+| `complicationRange` | int 1-5 | 1 | Width of complication range. 1 = only on a 20, 2 = 19-20, … 5 = 16-20 |
+| `seed` | int | — | Optional, for reproducible rolls |
+
+Example calls (the agent issues these via the tool, not as shell commands):
+
+- Default 2d20 test: `roll_dice({ target: 9, difficulty: 1 })`
+- 4d20 pool after spending AP: `roll_dice({ target: 8, difficulty: 3, numDice: 4 })`
+- Risky test with widened complication range: `roll_dice({ target: 10, difficulty: 2, complicationRange: 2 })`
+- Assistance roll: `roll_dice({ target: 7, difficulty: 0, numDice: 1 })` (helper rolls 1d20)
+
+The tool returns each d20 result with per-die tags (`success`, `miss`, `critical`, `complication` — non-exclusive), totals successes, declares pass/fail, and reports AP generated (raw excess; the agent enforces the group pool cap of 6). It also drives a linked Pip-Boy UI resource so the host can render the rolling animation. The tool does not consult the GM about which attribute + skill applies — that judgment stays with the human.
+
+The companion `show_character_sheet` tool renders a placeholder character sheet UI; the full character data model is intentionally TODO and will land in a follow-up.
+
+If the `fallout-helper` MCP server is not connected, ask the user to start it (see `mcp/fallout-helper/README.md` for client config) — do not invent rolls.
