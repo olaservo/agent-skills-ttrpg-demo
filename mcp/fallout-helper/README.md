@@ -7,9 +7,13 @@ MCP App server for *Fallout: The Roleplaying Game* (Modiphius 2d20 system). Prov
 
 This server replaces the Python `scripts/roll_test.py` that the `fallout-rpg` agent skill previously shelled out to.
 
-## Install in an MCP client (stdio)
+## Install
 
-Local development config:
+### MCPB (one-click, Claude Desktop)
+
+Download `fallout-helper-mcp.mcpb` from a GitHub release and open it in Claude Desktop.
+
+### Build from source
 
 ```json
 {
@@ -34,6 +38,10 @@ npm test                # vitest dice mechanics
 npm run start           # HTTP transport on http://localhost:3001/mcp
 npm run start:stdio     # stdio transport
 ```
+
+## Packaging
+
+`npm run pack` builds, prunes to production deps, and produces `fallout-helper-mcp.mcpb` at the package root via `@anthropic-ai/mcpb`. The script restores devDependencies after packing.
 
 ## Tools
 
