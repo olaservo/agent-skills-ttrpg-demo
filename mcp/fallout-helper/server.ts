@@ -138,7 +138,15 @@ export function createServer(): McpServer {
     async (): Promise<ReadResourceResult> => {
       const html = await fs.readFile(path.join(DIST_DIR, "dice-roll.html"), "utf-8");
       return {
-        contents: [{ uri: DICE_UI_URI, mimeType: RESOURCE_MIME_TYPE, text: html }],
+        contents: [
+          {
+            uri: DICE_UI_URI,
+            mimeType: RESOURCE_MIME_TYPE,
+            text: html,
+            // The Pip-Boy UI ships its own CRT chrome — opt out of host border.
+            _meta: { ui: { prefersBorder: false } },
+          },
+        ],
       };
     },
   );
@@ -152,7 +160,14 @@ export function createServer(): McpServer {
     async (): Promise<ReadResourceResult> => {
       const html = await fs.readFile(path.join(DIST_DIR, "character-sheet.html"), "utf-8");
       return {
-        contents: [{ uri: SHEET_UI_URI, mimeType: RESOURCE_MIME_TYPE, text: html }],
+        contents: [
+          {
+            uri: SHEET_UI_URI,
+            mimeType: RESOURCE_MIME_TYPE,
+            text: html,
+            _meta: { ui: { prefersBorder: false } },
+          },
+        ],
       };
     },
   );

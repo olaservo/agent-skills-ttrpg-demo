@@ -73,7 +73,16 @@ const rerollBtn = document.getElementById("reroll") as HTMLButtonElement;
 
 // ── State ────────────────────────────────────────────────────────────────
 let lastInput: RollArgs | null = null;
+let serverToolsAvailable = false;
 const tumbleTimers: number[] = [];
+
+function updateRerollAvailability(): void {
+  const enabled = serverToolsAvailable && lastInput !== null;
+  rerollBtn.disabled = !enabled;
+  rerollBtn.title = serverToolsAvailable
+    ? ""
+    : "RE-ROLL unavailable — host has not granted serverTools capability.";
+}
 
 function clearTumbleTimers() {
   while (tumbleTimers.length > 0) {
@@ -215,15 +224,16 @@ async function animateAndRender(result: DiceResult): Promise<void> {
   await settleDice(cells, result);
   renderSummary(result);
   setStatus(result.passed ? "PASS" : "FAIL", false);
-  rerollBtn.disabled = false;
+  updateRerollAvailability();
   reportSize();
 }
 
 function reportSize(): void {
   // Defer to next frame so layout has settled.
   requestAnimationFrame(() => {
+    const width = pipboy.scrollWidth;
     const height = pipboy.scrollHeight + 32;
-    app.sendSizeChanged({ height }).catch(() => {});
+    app.sendSizeChanged({ width, height }).catch(() => {});
   });
 }
 
@@ -280,7 +290,7 @@ app.ontoolresult = (toolResult) => {
 app.ontoolcancelled = (params) => {
   console.info("[dice-app] tool cancelled:", params.reason);
   setStatus("CANCELLED", false);
-  rerollBtn.disabled = lastInput === null;
+  updateRerollAvailability();
 };
 
 app.onhostcontextchanged = handleHostContextChanged;
@@ -299,13 +309,15 @@ rerollBtn.addEventListener("click", async () => {
   } catch (e) {
     console.error("[dice-app] re-roll failed:", e);
     setStatus("ERROR", false);
-    rerollBtn.disabled = false;
+    updateRerollAvailability();
   }
 });
 
 app.connect().then(() => {
+  serverToolsAvailable = app.getHostCapabilities()?.serverTools !== undefined;
   const ctx = app.getHostContext();
   if (ctx) handleHostContextChanged(ctx);
   setStatus("READY", false);
+  updateRerollAvailability();
   reportSize();
 });

@@ -46,8 +46,9 @@ app.onhostcontextchanged = handleHostContextChanged;
 
 function reportSize(): void {
   requestAnimationFrame(() => {
+    const width = pipboy.scrollWidth;
     const height = pipboy.scrollHeight + 32;
-    app.sendSizeChanged({ height }).catch(() => {});
+    app.sendSizeChanged({ width, height }).catch(() => {});
   });
 }
 
