@@ -10,27 +10,40 @@
   <main class="pipboy" id="pipboy">
     <header class="crt-header">
       <span class="vault-tec">PIP-BOY 3000 — CHARACTER</span>
-      <span class="status">PLACEHOLDER</span>
+      <span class="status" id="status">STANDBY</span>
     </header>
 
-    <section class="todo-card">
-      <h1 class="todo-title">CHARACTER SHEET — TODO</h1>
-      <p class="todo-lede">
-        Character data model not yet implemented. The full S.P.E.C.I.A.L.,
-        skills, HP, perks, and inventory schema will land in a follow-up.
-      </p>
+    <section class="hud" id="hud" hidden>
+      <div class="hud-name">
+        <h1 class="hud-title" id="char-name">—</h1>
+        <p class="hud-sub">
+          <span id="char-origin">—</span>
+          <span class="sep">·</span>
+          LVL <span id="char-level">—</span>
+          <span class="sep">·</span>
+          LCK <span id="char-luck">—</span>
+          <span class="sep">·</span>
+          HP <span id="char-hp">—</span>
+        </p>
+      </div>
+      <ul class="special" id="char-special">
+        <li><b>S</b><span data-stat="str">—</span></li>
+        <li><b>P</b><span data-stat="per">—</span></li>
+        <li><b>E</b><span data-stat="end">—</span></li>
+        <li><b>C</b><span data-stat="cha">—</span></li>
+        <li><b>I</b><span data-stat="int">—</span></li>
+        <li><b>A</b><span data-stat="agi">—</span></li>
+        <li><b>L</b><span data-stat="luk">—</span></li>
+      </ul>
+    </section>
 
-      <dl class="stub">
-        <dt>NAME</dt>           <dd>—</dd>
-        <dt>LEVEL</dt>          <dd>—</dd>
-        <dt>S.P.E.C.I.A.L.</dt> <dd>S — P — E — C — I — A — L —</dd>
-        <dt>SKILLS</dt>         <dd>—</dd>
-        <dt>HP</dt>             <dd>— / —</dd>
-        <dt>AP</dt>             <dd>—</dd>
-        <dt>LCK POINTS</dt>     <dd>—</dd>
-      </dl>
+    <section class="body" id="body" hidden>
+      <img class="portrait" id="portrait" alt="" />
+      <article class="sheet-md" id="sheet-md"></article>
+    </section>
 
-      <p class="hint" id="hint">No character loaded.</p>
+    <section class="empty" id="empty">
+      <p>No character loaded. Ask the agent to <code>show_character_sheet</code>.</p>
     </section>
   </main>
 
