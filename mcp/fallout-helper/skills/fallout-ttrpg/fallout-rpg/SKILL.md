@@ -6,6 +6,24 @@ metadata:
   source: "Fallout - The Roleplaying Game (Modiphius Entertainment), quickstart and full rulebook"
   system: "Modiphius 2d20"
   scope: "Growing - add new chapter content as references/<chapter>.md and link from the references map below"
+version: 1.0.0
+author:
+  name: Ola Hungerford
+license: CC-BY-4.0
+source: https://github.com/olaservo/agent-skills-ttrpg-demo/tree/main/mcp/fallout-helper/skills/fallout-ttrpg/fallout-rpg
+license_note: >
+  This SKILL.md is the author's original work. It encodes the 2d20 skill-test
+  loop, AP, Luck, and combat rules at the level of a player aid. GM ownership
+  of the published Fallout: The Roleplaying Game rulebook is assumed; no rules
+  text, tables, or stat blocks are reproduced verbatim.
+derived_from:
+  - title: "Fallout: The Roleplaying Game (Core Rulebook)"
+    publisher: Modiphius Entertainment
+    year: 2021
+    relationship: system
+    license: proprietary
+    rights_basis: fair_use_reading_aid
+    url: https://www.modiphius.net/products/fallout-the-roleplaying-game
 ---
 
 # Fallout - The Roleplaying Game
