@@ -5,6 +5,31 @@ metadata:
   source: "Chapter Three: Machine Frequency, Fallout - The Roleplaying Game adventure"
   system: "Modiphius 2d20"
   scope: "Complete three-act module + stat blocks. Combine with the fallout-rpg skill for system rules."
+version: 0.2.0
+author:
+  name: Ola Hungerford
+license: CC-BY-NC-SA-4.0
+source: https://github.com/olaservo/agent-skills-ttrpg-demo/tree/main/mcp/fallout-helper/skills/fallout-ttrpg/fallout-machine-frequency
+license_note: >
+  This SKILL.md is the author's structural encoding of a published adventure
+  for table-time reference. GM ownership of the published module is assumed;
+  no read-aloud text, stat blocks, or maps are reproduced verbatim. NC clause
+  reflects that distributing this encoding commercially would require
+  Modiphius's involvement.
+derived_from:
+  - title: "Fallout: The Roleplaying Game (Core Rulebook)"
+    publisher: Modiphius Entertainment
+    year: 2021
+    relationship: system
+    license: proprietary
+    rights_basis: fair_use_reading_aid
+    url: https://www.modiphius.net/products/fallout-the-roleplaying-game
+  - title: "Fallout: The Roleplaying Game — Adventure Module Chapter Three: Machine Frequency"
+    publisher: Modiphius Entertainment
+    year: 2022
+    relationship: adventure
+    license: proprietary
+    rights_basis: fair_use_reading_aid
 ---
 
 # Machine Frequency

@@ -6,6 +6,34 @@ metadata:
   source: "Custom pregens for Fallout - The Roleplaying Game (Modiphius 2d20)"
   system: "Modiphius 2d20"
   scope: "Six complete Level 1-3 player characters with full stats, gear, perks, and biographies."
+version: 1.0.0
+author:
+  name: Ola Hungerford
+license: CC-BY-4.0
+source: https://github.com/olaservo/agent-skills-ttrpg-demo/tree/main/mcp/fallout-helper/skills/fallout-ttrpg/fallout-character-sheets
+license_note: >
+  Six original pre-generated player characters. Backstories, names,
+  personalities, and creative content are the author's own. The skill uses
+  Modiphius 2d20 mechanics (S.P.E.C.I.A.L., perks, traits) via the fallout-rpg
+  skill but does not derive from any published Fallout adventure or pregen.
+derived_from:
+  - title: "Fallout: The Roleplaying Game (Core Rulebook)"
+    publisher: Modiphius Entertainment
+    year: 2021
+    relationship: system
+    license: proprietary
+    rights_basis: fair_use_reading_aid
+    url: https://www.modiphius.net/products/fallout-the-roleplaying-game
+  - title: "fallout-rpg"
+    publisher: Ola Hungerford
+    year: 2026
+    relationship: system_encoding
+    license: CC-BY-4.0
+    url: https://github.com/olaservo/agent-skills-ttrpg-demo/tree/main/mcp/fallout-helper/skills/fallout-ttrpg/fallout-rpg
+own_contributions:
+  - Six original pre-generated player characters with full sheets, biographies, and inventories
+  - Picker logic for matching players to characters by play style
+  - Composition guidance for pairing the party with the fallout-machine-frequency adventure
 ---
 
 # Fallout Pre-Generated Characters
