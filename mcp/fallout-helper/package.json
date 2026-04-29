@@ -28,6 +28,7 @@
     "@olaservo/ext-skills": "^0.8.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "marked": "^14.1.4",
     "zod": "^4.1.13"
   },
   "devDependencies": {

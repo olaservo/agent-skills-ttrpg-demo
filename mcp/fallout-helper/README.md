@@ -3,7 +3,8 @@
 MCP App server for *Fallout: The Roleplaying Game* (Modiphius 2d20 system). Provides:
 
 - **`roll_dice`** — server-side 2d20 skill test, with a Pip-Boy-themed animated UI resource.
-- **`show_character_sheet`** — placeholder UI resource for a character profile sheet (data model TODO).
+- **`present_player_choice`** — pauses the game and surfaces a 2-6 option narrative decision to the human player as a structured form (via MCP elicitation).
+- **`show_character_sheet`** — renders a Fallout pregen (one of six) in a Pip-Boy character sheet UI: name + origin + S.P.E.C.I.A.L. status strip, pixel-art portrait, and the full sheet body (skills / weapons / perks / hit-locations / inventory / biography) sourced from the `fallout-character-sheets` skill.
 
 This server replaces the Python `scripts/roll_test.py` that the `fallout-rpg` agent skill previously shelled out to.
 
@@ -34,7 +35,7 @@ Download `fallout-helper-mcp.mcpb` from a GitHub release and open it in Claude D
 ```bash
 npm install
 npm run build           # compile + bundle UI
-npm test                # vitest dice mechanics
+npm test                # vitest: dice mechanics + character-sheet parser
 npm run start           # HTTP transport on http://localhost:3001/mcp
 npm run start:stdio     # stdio transport
 ```
@@ -57,25 +58,43 @@ npm run start:stdio     # stdio transport
 
 Returns `structuredContent` with `rolls`, per-die `annotated` tags, totals, `passed`, `apGenerated`. The linked UI animates the dice and displays the outcome in a Pip-Boy-styled CRT panel.
 
+### `present_player_choice`
+
+| Arg | Type | Default | Notes |
+|---|---|---|---|
+| `prompt` | string | required | narrative framing shown to the player |
+| `options` | array of `{ id, label, description? }`, length 2-6 | required | mutually-exclusive choices; ids must be unique |
+| `allowFreeText` | bool | true | adds an optional elaboration text field to the form |
+
+Use at meaningful narrative branches (sneak vs. parley vs. assault), not for mechanical outcomes (those go through `roll_dice`) or pure flavor beats. Issues an MCP `elicitation/create` request — the host renders the form and blocks until the player picks. Returns `structuredContent` with `action: "accept" | "decline" | "cancel"`, plus `chosenId`, `chosenLabel`, and `elaboration` on accept. Falls back with an `isError` result if the connected client doesn't advertise the `elicitation` capability, prompting the agent to ask inline instead.
+
 ### `show_character_sheet`
 
-Placeholder. Returns a TODO card. The full character data model is intentionally not implemented yet.
+| Arg | Type | Notes |
+|---|---|---|
+| `characterId` | enum | one of `augusta-byron`, `tommy-doyle`, `bailey-bigsmile`, `old-tallman`, `hazel-johnson`, `marvin` |
+
+Reads the matching pregen Markdown from `skills/fallout-ttrpg/fallout-character-sheets/references/`, parses the headline stats (origin, level, S.P.E.C.I.A.L., max HP, luck points) into typed fields, and ships the rest as the `markdown` field of `structuredContent`. The UI renders the typed header into a Pip-Boy status strip + pixel-art SVG portrait, and renders the body markdown via `marked` with Pip-Boy-styled tables.
 
 ## Layout
 
 ```
 .
-├── server.ts             # createServer() — registers tools and resources
-├── main.ts               # entrypoint: stdio or Streamable HTTP
-├── dice-roll.html        # Vite input → dist/dice-roll.html
-├── character-sheet.html  # Vite input → dist/character-sheet.html
+├── server.ts                # createServer() — registers tools and resources
+├── main.ts                  # entrypoint: stdio or Streamable HTTP
+├── character-parser.ts      # parses pregen Markdown → typed header + body
+├── character-parser.test.ts
+├── dice-roll.html           # Vite input → dist/dice-roll.html
+├── character-sheet.html     # Vite input → dist/character-sheet.html
 ├── dice/
-│   ├── roll.ts           # pure dice mechanics (port of roll_test.py)
+│   ├── roll.ts              # pure dice mechanics (port of roll_test.py)
 │   └── roll.test.ts
 └── src/
-    ├── dice-app.ts       # client-side App for dice UI
-    ├── character-app.ts  # client-side App for sheet UI
+    ├── dice-app.ts          # client-side App for dice UI
+    ├── character-app.ts     # client-side App for sheet UI
     ├── pip-boy.css
     ├── dice-app.css
-    └── character-app.css
+    ├── character-app.css
+    ├── env.d.ts             # vite/client types (SVG imports)
+    └── portraits/           # 24×24 pixel-art SVG portraits, one per pregen
 ```

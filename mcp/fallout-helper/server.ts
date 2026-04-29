@@ -13,6 +13,7 @@ import type { CallToolResult, ReadResourceResult } from "@modelcontextprotocol/s
 import fs from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
+import { parseCharacterSheet } from "./character-parser.js";
 import { formatHuman, rollTest } from "./dice/roll.js";
 
 // Works both from source (server.ts) and compiled (dist/server.js).
@@ -28,6 +29,20 @@ const SKILLS_DIR = import.meta.filename.endsWith(".ts")
 
 const DICE_UI_URI = "ui://fallout-helper/dice-roll.html";
 const SHEET_UI_URI = "ui://fallout-helper/character-sheet.html";
+
+// Slug -> reference filename. Slugs are stable IDs the agent passes to
+// `show_character_sheet`; the numeric prefix on disk just orders the roster.
+const CHARACTERS = {
+  "augusta-byron": "01-augusta-byron.md",
+  "tommy-doyle": "02-happy-tommy-doyle.md",
+  "bailey-bigsmile": "03-bailey-bigsmile.md",
+  "old-tallman": "04-old-tallman.md",
+  "hazel-johnson": "05-hazel-johnson.md",
+  marvin: "06-marvin.md",
+} as const;
+type CharacterId = keyof typeof CHARACTERS;
+const CHARACTER_IDS = Object.keys(CHARACTERS) as [CharacterId, ...CharacterId[]];
+const CHARACTER_SHEETS_DIR = "fallout-ttrpg/fallout-character-sheets/references";
 
 export function createServer(): McpServer {
   const server = new McpServer(
@@ -268,32 +283,54 @@ export function createServer(): McpServer {
     {
       title: "Show Character Sheet",
       description:
-        "Display a Fallout RPG character sheet (placeholder; full data model is TODO).",
+        "Display a Fallout RPG pregen character sheet in the Pip-Boy UI. " +
+        "Available characters: augusta-byron (Vault Dweller scientist, L1), " +
+        "tommy-doyle ('Happy' Tommy Doyle — Survivor gambler, L2), " +
+        "bailey-bigsmile (Ghoul wanderer, L3), " +
+        "old-tallman (Super Mutant philosopher, L2), " +
+        "hazel-johnson (Brotherhood Field Scribe, L1), " +
+        "marvin (Mister Handy robot, L2).",
       inputSchema: {
         characterId: z
-          .string()
-          .optional()
-          .describe("Identifier for the character to display. Currently ignored — placeholder UI."),
+          .enum(CHARACTER_IDS)
+          .describe("Slug of the pregen to display (one of the six available IDs)."),
       },
       outputSchema: {
         characterId: z.string(),
-        todo: z.string(),
+        name: z.string(),
+        origin: z.string(),
+        level: z.number().int(),
+        luckPoints: z.number().int(),
+        maxHP: z.number().int(),
+        special: z.object({
+          str: z.number().int(),
+          per: z.number().int(),
+          end: z.number().int(),
+          cha: z.number().int(),
+          int: z.number().int(),
+          agi: z.number().int(),
+          luk: z.number().int(),
+        }),
+        markdown: z.string(),
       },
       _meta: { ui: { resourceUri: SHEET_UI_URI } },
     },
     async (args): Promise<CallToolResult> => {
-      const placeholder = {
-        characterId: args.characterId ?? "vault-dweller-001",
-        todo: "Character sheet schema not yet implemented.",
-      };
+      const characterId = args.characterId as CharacterId;
+      const filename = CHARACTERS[characterId];
+      const filePath = path.join(SKILLS_DIR, CHARACTER_SHEETS_DIR, filename);
+      const raw = await fs.readFile(filePath, "utf-8");
+      const parsed = parseCharacterSheet(raw);
       return {
         content: [
           {
             type: "text",
-            text: "Character sheet rendering is a placeholder; data model is TODO.",
+            text:
+              `Loaded ${parsed.name} (${parsed.origin}, Level ${parsed.level}) into the Pip-Boy. ` +
+              `S.P.E.C.I.A.L., skills, weapons, perks, hit-location HP, and inventory are visible to the player.`,
           },
         ],
-        structuredContent: placeholder,
+        structuredContent: { characterId, ...parsed },
       };
     },
   );
