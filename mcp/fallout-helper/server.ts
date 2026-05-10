@@ -4,9 +4,9 @@ import {
   RESOURCE_MIME_TYPE,
 } from "@modelcontextprotocol/ext-apps/server";
 import {
+  declareSkillsExtension,
   discoverSkills,
   registerSkillResources,
-  SKILLS_EXTENSION,
 } from "@olaservo/ext-skills/server";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult, ReadResourceResult } from "@modelcontextprotocol/sdk/types.js";
@@ -53,11 +53,12 @@ export function createServer(): McpServer {
     {
       capabilities: {
         resources: {},
-        // SEP-2640 §Capability Declaration
-        extensions: { [SKILLS_EXTENSION]: {} },
       },
     },
   );
+
+  // SEP-2640 §Capability Declaration. Must run before server.connect().
+  declareSkillsExtension(server.server);
 
   // ── Tool: roll_dice ────────────────────────────────────────────────────
   registerAppTool(
