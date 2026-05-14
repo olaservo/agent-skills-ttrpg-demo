@@ -3,38 +3,39 @@ name: fallout-rpg
 description: Run, GM, or adjudicate Fallout - The Roleplaying Game (Modiphius 2d20 system, Bethesda's Fallout IP). Use this skill when the user wants to play or look up rules for Fallout RPG / Fallout TTRPG / the Modiphius Fallout tabletop game. Activates for skill tests (rolling 2d20 against attribute+skill target numbers), S.P.E.C.I.A.L. attribute checks, Action Points (AP), Luck points, complications, critical successes, Combat Dice, hit locations, and wasteland gameplay rulings.
 compatibility: Dice rolls are produced by the `fallout-helper` MCP server bundled at `mcp/fallout-helper/`. The skill itself works in any text-only context, but skill tests in the game MUST use a compatible dice-rolling tool or physical dice roll.
 license: See LICENSE.txt
-version: 0.1.0
-skill_author: olaservo
+metadata:
+  version: 0.1.0
+  skill_author: olaservo
 
-sources:
-  - title: 2d20 System Reference Document
-    publisher: Modiphius Entertainment
-    url: https://www.drivethrurpg.com/en/product/403658/2d20-system-reference-document
-    rights_basis: license_grant
-    terms_url: https://help.drivethrurpg.com/hc/en-us/articles/12723219550871
-    covers: 2d20 mechanics - resolution loop, skill tests, AP economy, complications, Combat Dice
+  sources:
+    - title: 2d20 System Reference Document
+      publisher: Modiphius Entertainment
+      url: https://www.drivethrurpg.com/en/product/403658/2d20-system-reference-document
+      rights_basis: license_grant
+      terms_url: https://help.drivethrurpg.com/hc/en-us/articles/12723219550871
+      covers: 2d20 mechanics - resolution loop, skill tests, AP economy, complications, Combat Dice
 
-  - title: "Fallout: The Roleplaying Game - Quickstart Guide"
-    publisher: Modiphius Entertainment
-    ip_holder: Bethesda Softworks
-    url: https://modiphius.us/collections/fallout-the-roleplaying-game/products/fallout-the-roleplaying-game-quickstart-guide-pdf-free
-    rights_basis: fair_use_claim
-    covers: Fallout-specific overlays - S.P.E.C.I.A.L. attribute scheme, hit-location chart, sample pregens, Pip-Boy UI theming
+    - title: "Fallout: The Roleplaying Game - Quickstart Guide"
+      publisher: Modiphius Entertainment
+      ip_holder: Bethesda Softworks
+      url: https://modiphius.us/collections/fallout-the-roleplaying-game/products/fallout-the-roleplaying-game-quickstart-guide-pdf-free
+      rights_basis: fair_use_claim
+      covers: Fallout-specific overlays - S.P.E.C.I.A.L. attribute scheme, hit-location chart, sample pregens, Pip-Boy UI theming
 
-  - title: "Fallout: The Roleplaying Game - Core Rulebook"
-    publisher: Modiphius Entertainment
-    ip_holder: Bethesda Softworks
-    rights_basis: fair_use_claim
-    covers: combat chapter detail, full character creation, perks and gear (content not present in the free quickstart)
+    - title: "Fallout: The Roleplaying Game - Core Rulebook"
+      publisher: Modiphius Entertainment
+      ip_holder: Bethesda Softworks
+      rights_basis: fair_use_claim
+      covers: combat chapter detail, full character creation, perks and gear (content not present in the free quickstart)
 
-attribution: |
-  Unofficial fan project. Mechanics adapted from the 2d20 System Reference
-  Document by Modiphius Entertainment (used per the World Builders program's
-  mechanics-reuse permission). Fallout-specific elements - S.P.E.C.I.A.L.,
-  hit locations, setting references, pregens - summarized from Fallout: The
-  Roleplaying Game by Modiphius Entertainment under license from Bethesda
-  Softworks. Not an official product. Players should buy the core rulebook.
-  Skill compiled by olaservo; see LICENSE.txt for license details.
+  attribution: |
+    Unofficial fan project. Mechanics adapted from the 2d20 System Reference
+    Document by Modiphius Entertainment (used per the World Builders program's
+    mechanics-reuse permission). Fallout-specific elements - S.P.E.C.I.A.L.,
+    hit locations, setting references, pregens - summarized from Fallout: The
+    Roleplaying Game by Modiphius Entertainment under license from Bethesda
+    Softworks. Not an official product. Players should buy the core rulebook.
+    Skill compiled by olaservo; see LICENSE.txt for license details.
 ---
 
 # Fallout - The Roleplaying Game
