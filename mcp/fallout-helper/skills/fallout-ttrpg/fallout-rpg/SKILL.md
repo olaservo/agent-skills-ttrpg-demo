@@ -5,7 +5,9 @@ compatibility: Dice rolls are produced by the `fallout-helper` MCP server bundle
 license: See LICENSE.txt
 metadata:
   version: 0.1.0
-  skill_author: olaservo
+  skill_author:
+    name: Ola Hungerford
+    url: https://github.com/olaservo
 
   sources:
     - title: 2d20 System Reference Document
@@ -35,7 +37,9 @@ metadata:
     hit locations, setting references, pregens - summarized from Fallout: The
     Roleplaying Game by Modiphius Entertainment under license from Bethesda
     Softworks. Not an official product. Players should buy the core rulebook.
-    Skill compiled by olaservo; see LICENSE.txt for license details.
+    Fallout, S.P.E.C.I.A.L., Pip-Boy, and related marks are trademarks of
+    Bethesda Softworks LLC; 2d20 is a trademark of Modiphius Entertainment.
+    Skill compiled by Ola Hungerford; see LICENSE.txt for license details.
 ---
 
 # Fallout - The Roleplaying Game
