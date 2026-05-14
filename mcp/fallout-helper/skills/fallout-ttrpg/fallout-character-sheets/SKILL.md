@@ -2,38 +2,57 @@
 name: fallout-character-sheets
 description: >-
   Pre-generated player characters for Fallout - The Roleplaying Game (Modiphius 2d20). Use this skill when the user asks to pick a pregen, hand out characters, look up a PC's S.P.E.C.I.A.L., skills, perks, weapons, HP, inventory, or biography, or needs a ready-made party for a one-shot or convention game. The roster has six balanced PCs spanning Levels 1-3: Augusta Byron (Vault Dweller scientist), "Happy" Tommy Doyle (Survivor gambler), Bailey Bigsmile (Ghoul wanderer), Old Tallman (Super Mutant philosopher), Hazel Johnson (Brotherhood Field Scribe), and Marvin (Mister Handy robot). Activates when the user mentions any of these character names, "pregens", "pre-generated characters", "character sheets", "the party", "who can I play", or asks for any of these PCs' tag skills, traits, gear, or background. Pair with the fallout-rpg skill for the underlying 2d20 mechanics; the party also fits the fallout-machine-frequency adventure module well.
-metadata:
-  source: "Custom pregens for Fallout - The Roleplaying Game (Modiphius 2d20)"
-  system: "Modiphius 2d20"
-  scope: "Six complete Level 1-3 player characters with full stats, gear, perks, and biographies."
-version: 1.0.0
-author:
-  name: Ola Hungerford
+
 license: CC-BY-4.0
-source: https://github.com/olaservo/agent-skills-ttrpg-demo/tree/main/mcp/fallout-helper/skills/fallout-ttrpg/fallout-character-sheets
-license_note: >
-  Six original pre-generated player characters. Backstories, names,
-  personalities, and creative content are the author's own. The skill uses
-  Modiphius 2d20 mechanics (S.P.E.C.I.A.L., perks, traits) via the fallout-rpg
-  skill but does not derive from any published Fallout adventure or pregen.
-derived_from:
+version: 1.0.0
+skill_author:
+  name: Ola Hungerford
+  url: https://github.com/olaservo
+
+depends_on:
+  - fallout-rpg
+
+scope: Six complete Level 1-3 player characters with full stats, gear, perks, and biographies.
+
+sources:
+  - title: fallout-rpg (sibling skill)
+    publisher: Ola Hungerford
+    url: https://github.com/olaservo/agent-skills-ttrpg-demo/tree/main/mcp/fallout-helper/skills/fallout-ttrpg/fallout-rpg
+    relationship: system_encoding
+    rights_basis: license_grant
+    covers: 2d20 mechanics (S.P.E.C.I.A.L., skills, perks, AP, Luck, combat resolution) referenced by every sheet
+    license: CC-BY-4.0
+
   - title: "Fallout: The Roleplaying Game (Core Rulebook)"
     publisher: Modiphius Entertainment
+    ip_holder: Bethesda Softworks
     year: 2021
-    relationship: system
-    license: proprietary
-    rights_basis: fair_use_reading_aid
     url: https://www.modiphius.net/products/fallout-the-roleplaying-game
-  - title: "fallout-rpg"
-    publisher: Ola Hungerford
-    year: 2026
-    relationship: system_encoding
-    license: CC-BY-4.0
-    url: https://github.com/olaservo/agent-skills-ttrpg-demo/tree/main/mcp/fallout-helper/skills/fallout-ttrpg/fallout-rpg
+    relationship: trademark_setting_vocabulary
+    rights_basis: fair_use_claim
+    covers: Fallout-universe origins and trademark terms used in pregen backgrounds (Brotherhood Initiate, Vault Dweller, Super Mutant, Ghoul, Mister Handy, Pip-Boy)
+    notes: No characters, stat blocks, or read-aloud text from the rulebook are reproduced. Only setting vocabulary necessary to place original characters inside the Fallout universe.
+
 own_contributions:
   - Six original pre-generated player characters with full sheets, biographies, and inventories
   - Picker logic for matching players to characters by play style
   - Composition guidance for pairing the party with the fallout-machine-frequency adventure
+
+attribution: |
+  Six pre-generated player characters by Ola Hungerford, licensed CC-BY-4.0.
+  Built on the fallout-rpg sibling skill for 2d20 system mechanics. Uses
+  Fallout-universe setting vocabulary under fair use claim; Fallout,
+  S.P.E.C.I.A.L., Pip-Boy, and related marks are trademarks of Bethesda
+  Softworks LLC. Fallout: The Roleplaying Game is published by Modiphius
+  Entertainment. This is an unofficial fan project; players should buy the
+  core rulebook to support the publisher.
+
+license_note: >
+  Original creative content (characters, biographies, picker logic) is the
+  author's own work under CC-BY-4.0. The skill uses Modiphius 2d20 mechanics
+  via the fallout-rpg sibling skill and Bethesda-trademarked Fallout setting
+  vocabulary; no published Fallout adventure, pregen, or read-aloud text is
+  reproduced.
 ---
 
 # Fallout Pre-Generated Characters

@@ -1,29 +1,40 @@
 ---
 name: fallout-rpg
-description: Run, GM, or adjudicate Fallout - The Roleplaying Game (Modiphius 2d20 system). Use this skill when the user wants to play, run, or look up rules for Fallout RPG / Fallout TTRPG / the Modiphius Fallout tabletop game. Activates for skill tests (rolling 2d20 against an attribute+skill target number), S.P.E.C.I.A.L. attribute checks, Action Points (AP), Luck points, complications, critical successes, opposed and group tests, combat (initiative, minor/major actions, attacks, hit locations, range, Combat Dice, damage effects, injuries, dying, healing, cover, zones, hazards, traps), and wasteland gameplay rulings. Currently covers the core 2d20 resolution loop and full combat chapter; additional chapters (character creation, perks, gear) are added to references/ over time.
-compatibility: Dice rolls are produced by the `fallout-helper` MCP server (TypeScript MCP App) bundled at `mcp/fallout-helper/`. The skill itself works in any text-only context, but skill tests require the MCP server to be connected — do not fall back to inline dice math.
-metadata:
-  source: "Fallout - The Roleplaying Game (Modiphius Entertainment), quickstart and full rulebook"
-  system: "Modiphius 2d20"
-  scope: "Growing - add new chapter content as references/<chapter>.md and link from the references map below"
-version: 1.0.0
-author:
-  name: Ola Hungerford
-license: CC-BY-4.0
-source: https://github.com/olaservo/agent-skills-ttrpg-demo/tree/main/mcp/fallout-helper/skills/fallout-ttrpg/fallout-rpg
-license_note: >
-  This SKILL.md is the author's original work. It encodes the 2d20 skill-test
-  loop, AP, Luck, and combat rules at the level of a player aid. GM ownership
-  of the published Fallout: The Roleplaying Game rulebook is assumed; no rules
-  text, tables, or stat blocks are reproduced verbatim.
-derived_from:
-  - title: "Fallout: The Roleplaying Game (Core Rulebook)"
+description: Run, GM, or adjudicate Fallout - The Roleplaying Game (Modiphius 2d20 system, Bethesda's Fallout IP). Use this skill when the user wants to play or look up rules for Fallout RPG / Fallout TTRPG / the Modiphius Fallout tabletop game. Activates for skill tests (rolling 2d20 against attribute+skill target numbers), S.P.E.C.I.A.L. attribute checks, Action Points (AP), Luck points, complications, critical successes, Combat Dice, hit locations, and wasteland gameplay rulings.
+compatibility: Dice rolls are produced by the `fallout-helper` MCP server bundled at `mcp/fallout-helper/`. The skill itself works in any text-only context, but skill tests in the game MUST use a compatible dice-rolling tool or physical dice roll.
+license: See LICENSE.txt
+version: 0.1.0
+skill_author: olaservo
+
+sources:
+  - title: 2d20 System Reference Document
     publisher: Modiphius Entertainment
-    year: 2021
-    relationship: system
-    license: proprietary
-    rights_basis: fair_use_reading_aid
-    url: https://www.modiphius.net/products/fallout-the-roleplaying-game
+    url: https://www.drivethrurpg.com/en/product/403658/2d20-system-reference-document
+    rights_basis: license_grant
+    terms_url: https://help.drivethrurpg.com/hc/en-us/articles/12723219550871
+    covers: 2d20 mechanics - resolution loop, skill tests, AP economy, complications, Combat Dice
+
+  - title: "Fallout: The Roleplaying Game - Quickstart Guide"
+    publisher: Modiphius Entertainment
+    ip_holder: Bethesda Softworks
+    url: https://modiphius.us/collections/fallout-the-roleplaying-game/products/fallout-the-roleplaying-game-quickstart-guide-pdf-free
+    rights_basis: fair_use_claim
+    covers: Fallout-specific overlays - S.P.E.C.I.A.L. attribute scheme, hit-location chart, sample pregens, Pip-Boy UI theming
+
+  - title: "Fallout: The Roleplaying Game - Core Rulebook"
+    publisher: Modiphius Entertainment
+    ip_holder: Bethesda Softworks
+    rights_basis: fair_use_claim
+    covers: combat chapter detail, full character creation, perks and gear (content not present in the free quickstart)
+
+attribution: |
+  Unofficial fan project. Mechanics adapted from the 2d20 System Reference
+  Document by Modiphius Entertainment (used per the World Builders program's
+  mechanics-reuse permission). Fallout-specific elements - S.P.E.C.I.A.L.,
+  hit locations, setting references, pregens - summarized from Fallout: The
+  Roleplaying Game by Modiphius Entertainment under license from Bethesda
+  Softworks. Not an official product. Players should buy the core rulebook.
+  Skill compiled by olaservo; see LICENSE.txt for license details.
 ---
 
 # Fallout - The Roleplaying Game
@@ -189,5 +200,3 @@ present_player_choice({
 ```
 
 If the connected client doesn't support MCP elicitation, the tool returns `isError: true` with a message saying so — fall back to asking the player inline in chat.
-
-If the `fallout-helper` MCP server is not connected, ask the user to start it (see `mcp/fallout-helper/README.md` for client config) — do not invent rolls.

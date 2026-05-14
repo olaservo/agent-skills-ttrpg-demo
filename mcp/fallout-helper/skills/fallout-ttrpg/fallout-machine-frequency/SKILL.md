@@ -1,35 +1,52 @@
 ---
 name: fallout-machine-frequency
 description: Run or GM "Machine Frequency", a three-act Fallout - The Roleplaying Game adventure module. The PCs are recruited by elderly Brotherhood Scribe Galen Portno to rescue survivors of a downed Vertibird, follow the trail through the irradiated ghoul town of Bleakford, and confront an Enclave-remnant scientist (Dr. Akiva Trestridge) who is transferring her consciousness into an assaultron at Joint Base Lewiston. Activates when the user wants to play, prep, run, or look up content from Machine Frequency, the Vertibird crash, Listening Point Echo, Beriday Gulch, Kullen Bridge, Bleakford, Joint Base Lewiston, Scribe Galen, Knight Helen Layton, Knights Pierce/Macey, or Dr. Trestridge. Pair with the fallout-rpg skill for the underlying 2d20 mechanics (skill tests, AP, Luck, complications).
-metadata:
-  source: "Chapter Three: Machine Frequency, Fallout - The Roleplaying Game adventure"
-  system: "Modiphius 2d20"
-  scope: "Complete three-act module + stat blocks. Combine with the fallout-rpg skill for system rules."
-version: 0.2.0
-author:
-  name: Ola Hungerford
+
 license: CC-BY-NC-SA-4.0
-source: https://github.com/olaservo/agent-skills-ttrpg-demo/tree/main/mcp/fallout-helper/skills/fallout-ttrpg/fallout-machine-frequency
+version: 0.2.0
+skill_author:
+  name: Ola Hungerford
+  url: https://github.com/olaservo
+
+depends_on:
+  - fallout-rpg
+
+scope: Complete three-act adventure encoding (locations, encounters, NPCs, plot beats) for GMs who own the published module. Pair with fallout-rpg for system rules.
+
+sources:
+  - title: fallout-rpg (sibling skill)
+    publisher: Ola Hungerford
+    url: https://github.com/olaservo/agent-skills-ttrpg-demo/tree/main/mcp/fallout-helper/skills/fallout-ttrpg/fallout-rpg
+    relationship: system_encoding
+    rights_basis: license_grant
+    covers: 2d20 mechanics referenced in stat blocks, skill tests, and combat encounters
+    license: CC-BY-4.0
+
+  - title: "Fallout: The Roleplaying Game - Adventure Module Chapter Three: Machine Frequency"
+    publisher: Modiphius Entertainment
+    ip_holder: Bethesda Softworks
+    year: 2022
+    relationship: adventure_reading_aid
+    rights_basis: fair_use_reading_aid
+    covers: adventure structure, location summaries, NPC roles, plot beats, GM gotchas - all in author's own words; no read-aloud text, stat blocks, or maps reproduced verbatim
+    notes: GM ownership of the published module is assumed. This skill is a navigational reading aid, not a replacement.
+
+attribution: |
+  Structural encoding of the Machine Frequency adventure for Fallout: The
+  Roleplaying Game (Modiphius Entertainment), used as a reading aid for GMs
+  who own the published module. No read-aloud text, stat blocks, or maps are
+  reproduced verbatim. Skill compiled by Ola Hungerford, licensed
+  CC-BY-NC-SA-4.0. Fallout is a trademark of Bethesda Softworks LLC;
+  Machine Frequency is published by Modiphius Entertainment under license.
+  This is an unofficial fan project; GMs should own the published module.
+
 license_note: >
   This SKILL.md is the author's structural encoding of a published adventure
   for table-time reference. GM ownership of the published module is assumed;
-  no read-aloud text, stat blocks, or maps are reproduced verbatim. NC clause
-  reflects that distributing this encoding commercially would require
-  Modiphius's involvement.
-derived_from:
-  - title: "Fallout: The Roleplaying Game (Core Rulebook)"
-    publisher: Modiphius Entertainment
-    year: 2021
-    relationship: system
-    license: proprietary
-    rights_basis: fair_use_reading_aid
-    url: https://www.modiphius.net/products/fallout-the-roleplaying-game
-  - title: "Fallout: The Roleplaying Game — Adventure Module Chapter Three: Machine Frequency"
-    publisher: Modiphius Entertainment
-    year: 2022
-    relationship: adventure
-    license: proprietary
-    rights_basis: fair_use_reading_aid
+  no read-aloud text, stat blocks, or maps are reproduced verbatim. The NC
+  clause reflects that distributing this encoding commercially would require
+  Modiphius's involvement; the SA clause keeps downstream encodings of
+  Modiphius adventures on the same footing.
 ---
 
 # Machine Frequency
