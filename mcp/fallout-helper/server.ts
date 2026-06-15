@@ -15,6 +15,7 @@ import path from "node:path";
 import { z } from "zod";
 import { parseCharacterSheet } from "./character-parser.js";
 import { formatHuman, rollTest } from "./dice/roll.js";
+import { publishToolEvent } from "./events.js";
 
 // Works both from source (server.ts) and compiled (dist/server.js).
 const DIST_DIR = import.meta.filename.endsWith(".ts")
@@ -126,8 +127,19 @@ export function createServer(): McpServer {
       // UI iframe. Anything the agent needs to reason about must be in
       // `content`. The UI consumes `structuredContent` directly to drive
       // the dice animation and per-die tag classes.
+      const content = [{ type: "text" as const, text: formatHuman(result) }];
+      // Broadcast to companion screens (e.g. the phone UI) so the dice
+      // widget renders live the moment the DM rolls.
+      publishToolEvent({
+        type: "tool_result",
+        toolName: "roll_dice",
+        resourceUri: DICE_UI_URI,
+        arguments: args,
+        structuredContent: result,
+        content,
+      });
       return {
-        content: [{ type: "text", text: formatHuman(result) }],
+        content,
         structuredContent: result as unknown as { [key: string]: unknown },
       };
     },
@@ -196,6 +208,16 @@ export function createServer(): McpServer {
         };
       }
 
+      // Surface the pending choice on companion screens *before* elicitInput
+      // blocks. The phone shows it for the table; the player still answers via
+      // the host's elicitation (Codex terminal / out loud), not the phone.
+      publishToolEvent({
+        type: "choice_prompt",
+        toolName: "present_player_choice",
+        prompt,
+        options,
+      });
+
       const optionsList = options
         .map((o) => `• ${o.label}${o.description ? ` — ${o.description}` : ""}`)
         .join("\n");
@@ -214,16 +236,23 @@ export function createServer(): McpServer {
       };
 
       try {
-        const result = await server.server.elicitInput({
-          message,
-          requestedSchema: {
-            type: "object",
-            properties: allowFreeText
-              ? { choice: choiceSchema, elaboration: elaborationSchema }
-              : { choice: choiceSchema },
-            required: ["choice"],
+        const result = await server.server.elicitInput(
+          {
+            message,
+            requestedSchema: {
+              type: "object",
+              properties: allowFreeText
+                ? { choice: choiceSchema, elaboration: elaborationSchema }
+                : { choice: choiceSchema },
+              required: ["choice"],
+            },
           },
-        });
+          {
+            // Tabletop players deliberate — give them 10 minutes before the
+            // choice times out (SDK default is only 60s) and falls back to inline.
+            timeout: 600_000,
+          },
+        );
 
         if (result.action === "accept" && result.content) {
           const chosenId = result.content.choice as string;
@@ -322,16 +351,26 @@ export function createServer(): McpServer {
       const filePath = path.join(SKILLS_DIR, CHARACTER_SHEETS_DIR, filename);
       const raw = await fs.readFile(filePath, "utf-8");
       const parsed = parseCharacterSheet(raw);
+      const structuredContent = { characterId, ...parsed };
+      const content = [
+        {
+          type: "text" as const,
+          text:
+            `Loaded ${parsed.name} (${parsed.origin}, Level ${parsed.level}) into the Pip-Boy. ` +
+            `S.P.E.C.I.A.L., skills, weapons, perks, hit-location HP, and inventory are visible to the player.`,
+        },
+      ];
+      publishToolEvent({
+        type: "tool_result",
+        toolName: "show_character_sheet",
+        resourceUri: SHEET_UI_URI,
+        arguments: args,
+        structuredContent,
+        content,
+      });
       return {
-        content: [
-          {
-            type: "text",
-            text:
-              `Loaded ${parsed.name} (${parsed.origin}, Level ${parsed.level}) into the Pip-Boy. ` +
-              `S.P.E.C.I.A.L., skills, weapons, perks, hit-location HP, and inventory are visible to the player.`,
-          },
-        ],
-        structuredContent: { characterId, ...parsed },
+        content,
+        structuredContent,
       };
     },
   );

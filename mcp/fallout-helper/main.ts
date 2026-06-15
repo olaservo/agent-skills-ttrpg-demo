@@ -8,9 +8,21 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import cors from "cors";
 import type { Request, Response } from "express";
+import path from "node:path";
+import { randomUUID } from "node:crypto";
 import { createServer } from "./server.js";
+import { addSubscriber, removeSubscriber } from "./events.js";
+
+// Mirror server.ts: works from source (main.ts) and compiled (dist/index.js).
+const DIST_DIR = import.meta.filename.endsWith(".ts")
+  ? path.join(import.meta.dirname, "dist")
+  : import.meta.dirname;
+
+// Widget HTML the companion UI fetches. Allow-list, not blanket static.
+const WIDGET_FILES = new Set(["dice-roll.html", "character-sheet.html"]);
 
 export async function startStreamableHTTPServer(
   factory: () => McpServer,
@@ -18,33 +30,116 @@ export async function startStreamableHTTPServer(
   const port = parseInt(process.env.PORT ?? "3001", 10);
 
   const app = createMcpExpressApp({ host: "0.0.0.0" });
-  app.use(cors());
+  // Reflect the requesting origin so the phone companion UI (served from a
+  // different port over wifi) can reach both the SSE stream and /mcp.
+  app.use(
+    cors({
+      origin: true,
+      exposedHeaders: ["Mcp-Session-Id"],
+      allowedHeaders: ["*"],
+    }),
+  );
 
-  app.all("/mcp", async (req: Request, res: Response) => {
-    const server = factory();
-    const transport = new StreamableHTTPServerTransport({
-      sessionIdGenerator: undefined,
+  // ── SSE: live tool-activity stream for companion screens ────────────────
+  app.get("/events", (req: Request, res: Response) => {
+    res.set({
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache, no-transform",
+      Connection: "keep-alive",
     });
-
-    res.on("close", () => {
-      transport.close().catch(() => {});
-      server.close().catch(() => {});
+    res.flushHeaders?.();
+    res.write(": connected\n\n");
+    addSubscriber(res);
+    const heartbeat = setInterval(() => {
+      try {
+        res.write(": ping\n\n");
+      } catch {
+        /* closed; cleaned up on req close */
+      }
+    }, 15000);
+    req.on("close", () => {
+      clearInterval(heartbeat);
+      removeSubscriber(res);
     });
+  });
 
+  // ── Static widget HTML (single source of truth; phone fetches these) ────
+  app.get("/widgets/:name", (req: Request, res: Response) => {
+    const name = req.params.name;
+    if (!WIDGET_FILES.has(name)) {
+      res.status(404).end();
+      return;
+    }
+    res.sendFile(path.join(DIST_DIR, name));
+  });
+
+  // Stateful StreamableHTTP: one transport (and McpServer) per session, reused
+  // across requests. This preserves the initialize handshake — including the
+  // client's advertised capabilities — so server→client requests like
+  // elicitation (present_player_choice) work. Stateless mode (a fresh server per
+  // request) loses those capabilities and breaks elicitation.
+  const transports = new Map<string, StreamableHTTPServerTransport>();
+
+  const onMcpError = (res: Response, error: unknown) => {
+    console.error("MCP error:", error);
+    if (!res.headersSent) {
+      res.status(500).json({
+        jsonrpc: "2.0",
+        error: { code: -32603, message: "Internal server error" },
+        id: null,
+      });
+    }
+  };
+
+  // POST — client→server messages (incl. initialize).
+  app.post("/mcp", async (req: Request, res: Response) => {
     try {
-      await server.connect(transport);
+      const sessionId = req.headers["mcp-session-id"] as string | undefined;
+      let transport = sessionId ? transports.get(sessionId) : undefined;
+
+      if (!transport) {
+        // Only a fresh initialize may create a new session.
+        if (sessionId || !isInitializeRequest(req.body)) {
+          res.status(400).json({
+            jsonrpc: "2.0",
+            error: { code: -32000, message: "Bad Request: no valid session" },
+            id: null,
+          });
+          return;
+        }
+        const newTransport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: () => randomUUID(),
+          onsessioninitialized: (sid) => transports.set(sid, newTransport),
+        });
+        newTransport.onclose = () => {
+          if (newTransport.sessionId) transports.delete(newTransport.sessionId);
+        };
+        await factory().connect(newTransport);
+        transport = newTransport;
+      }
+
       await transport.handleRequest(req, res, req.body);
     } catch (error) {
-      console.error("MCP error:", error);
-      if (!res.headersSent) {
-        res.status(500).json({
-          jsonrpc: "2.0",
-          error: { code: -32603, message: "Internal server error" },
-          id: null,
-        });
-      }
+      onMcpError(res, error);
     }
   });
+
+  // GET — server→client SSE stream (carries elicitation requests). DELETE — end session.
+  const handleSessionRequest = async (req: Request, res: Response) => {
+    const sessionId = req.headers["mcp-session-id"] as string | undefined;
+    const transport = sessionId ? transports.get(sessionId) : undefined;
+    if (!transport) {
+      res.status(400).send("Invalid or missing session ID");
+      return;
+    }
+    try {
+      await transport.handleRequest(req, res);
+    } catch (error) {
+      onMcpError(res, error);
+    }
+  };
+  app.get("/mcp", handleSessionRequest);
+  app.delete("/mcp", handleSessionRequest);
 
   const httpServer = app.listen(port, (err) => {
     if (err) {
@@ -68,10 +163,14 @@ export async function startStdioServer(factory: () => McpServer): Promise<void> 
 }
 
 async function main() {
+  // Always start HTTP so the companion UI has /events + /mcp + /widgets,
+  // regardless of how Codex connects. In --stdio mode we ALSO connect a stdio
+  // transport for Codex; both share the module-level event bus in events.ts.
+  // (Run only ONE process: standalone HTTP *or* a Codex-spawned --stdio one —
+  // never both, or they'd collide on the port and split the bus.)
+  await startStreamableHTTPServer(createServer);
   if (process.argv.includes("--stdio")) {
     await startStdioServer(createServer);
-  } else {
-    await startStreamableHTTPServer(createServer);
   }
 }
 
