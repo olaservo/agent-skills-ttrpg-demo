@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Sandbox Proxy</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      // MCP-Apps sandbox proxy for @mcp-ui/client AppRenderer / AppFrame.
+      // Protocol (ext-apps app-bridge):
+      //   - on load, tell the host we're ready
+      //   - when the host sends the resource HTML, render it via document.write
+      // (The legacy mcp-ui proxy used ?contentType=rawhtml + ui-html-content and
+      // is NOT compatible with AppFrame — that produced "missing url or html".)
+      window.addEventListener("message", (event) => {
+        const data = event.data;
+        if (!data || typeof data !== "object") return;
+        if (data.method === "ui/notifications/sandbox-resource-ready") {
+          const html = data.params && data.params.html;
+          if (typeof html === "string") {
+            document.open();
+            document.write(html);
+            document.close();
+          }
+        }
+      });
+
+      // Signal readiness; the host responds with sandbox-resource-ready(html).
+      window.parent.postMessage(
+        { method: "ui/notifications/sandbox-proxy-ready", params: {} },
+        "*",
+      );
+    </script>
+  </body>
+</html>
