@@ -5,7 +5,11 @@ import { useMcpClient } from "./mcpClient";
 import { useToolEvents } from "./useToolEvents";
 import { widgetUrl } from "./serverBase";
 import { ChoiceCard } from "./ChoiceCard";
+import { TranscriptPanel } from "./TranscriptPanel";
 import type { ToolEvent } from "./types";
+
+/** Keep the live conversation log from growing without bound. */
+const MAX_TRANSCRIPT_LINES = 50;
 
 /**
  * Live companion screen: subscribes to the server's tool-activity SSE and mounts
@@ -22,6 +26,7 @@ type View =
 export function App() {
   const client = useMcpClient();
   const [view, setView] = useState<View>({ kind: "idle" });
+  const [transcript, setTranscript] = useState<ToolEvent[]>([]);
   const [html, setHtml] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -34,6 +39,12 @@ export function App() {
   const localCall = useRef<{ tool: string; until: number } | null>(null);
 
   const onEvent = useCallback((evt: ToolEvent) => {
+    if (evt.type === "transcript") {
+      // Independent of the widget/choice/idle view machine — just append to the log,
+      // so a spoken line never disturbs the widget currently on screen.
+      setTranscript((prev) => [...prev, evt].slice(-MAX_TRANSCRIPT_LINES));
+      return;
+    }
     if (evt.type === "choice_prompt") {
       setView({ kind: "choice", event: evt, key: evt.seq });
       return;
@@ -172,6 +183,8 @@ export function App() {
             </div>
           ))}
       </main>
+
+      <TranscriptPanel lines={transcript} />
     </div>
   );
 }
