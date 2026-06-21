@@ -135,11 +135,23 @@ function startTumbling(cells: HTMLElement[]): void {
     const t = window.setInterval(() => {
       face.textContent = String(1 + Math.floor(Math.random() * 20));
     }, 50);
+    // Associate the timer with this specific die so settleDie can stop just
+    // this die's tumble (otherwise a still-running tick clobbers the settled
+    // face of an already-settled die — see the staggered settle in settleDice).
+    cell.dataset.tumbleTimer = String(t);
     tumbleTimers.push(t);
   }
 }
 
 function settleDie(cell: HTMLElement, ann: AnnotatedDie): void {
+  // Stop THIS die's tumble timer before writing the real face, so a pending
+  // tumble tick can't overwrite the settled value (the bug that showed e.g. 7
+  // instead of 3 on a non-last die).
+  const t = Number(cell.dataset.tumbleTimer);
+  if (t) {
+    clearInterval(t);
+    delete cell.dataset.tumbleTimer;
+  }
   const face = cell.querySelector<HTMLElement>(".face")!;
   const chip = cell.querySelector<HTMLElement>(".chip")!;
   cell.classList.remove("tumbling");
@@ -174,14 +186,12 @@ function settleDice(cells: HTMLElement[], result: DiceResult): Promise<void> {
     let settled = 0;
     cells.forEach((cell, i) => {
       window.setTimeout(() => {
-        // Stop the tumble for this specific die — but we used shared timers,
-        // so instead we just settle and let the timer overwrite be no-op
-        // (face will be overwritten by settleDie before next tumble tick).
+        // settleDie stops this die's own tumble timer before writing the real
+        // face, so the settled value can't be clobbered by a pending tick.
         settleDie(cell, result.annotated[i]!);
         settled += 1;
         if (settled === cells.length) {
-          // Now stop all remaining tumble timers (they're harmless after settle,
-          // but we want them gone so re-roll can rebuild cleanly).
+          // Belt-and-suspenders: drop any stragglers so re-roll rebuilds cleanly.
           clearTumbleTimers();
           resolve();
         }
