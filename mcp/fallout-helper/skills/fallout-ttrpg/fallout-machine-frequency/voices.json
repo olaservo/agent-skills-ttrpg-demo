@@ -1,17 +1,14 @@
 {
-  "scribe galen": "npc_settler",
-  "scribe galen portno": "npc_settler",
-  "galen": "npc_settler",
-  "knight helen layton": "npc_settler",
-  "helen layton": "npc_settler",
-  "helen": "npc_settler",
-  "knight pierce": "npc_raider",
-  "pierce": "npc_raider",
-  "knight macey": "npc_raider",
-  "macey": "npc_raider",
-  "dr akiva trestridge": "npc_overseer",
-  "akiva trestridge": "npc_overseer",
-  "trestridge": "npc_overseer",
-  "sam breckinridge": "npc_settler",
-  "sam": "npc_settler"
+  "characters": [
+    { "names": ["Scribe Galen", "Scribe Galen Portno", "Galen"], "voice_id": "npc_settler" },
+    { "names": ["Knight Helen Layton", "Helen Layton", "Helen"], "voice_id": "npc_settler" },
+    { "names": ["Knight Pierce", "Pierce"], "voice_id": "npc_raider" },
+    { "names": ["Knight Macey", "Macey"], "voice_id": "npc_raider" },
+    {
+      "names": ["Dr. Akiva Trestridge", "Akiva Trestridge", "Trestridge"],
+      "voice_id": "trestridge_enclave",
+      "design_prompt": "A cold, precise woman in her fifties: clipped, clinical diction with a faint metallic, synthetic edge as if filtered through a machine. Calm, imperious, utterly without warmth - an Enclave scientist who has traded her body for a robotic shell."
+    },
+    { "names": ["Sam Breckinridge", "Sam"], "voice_id": "npc_settler" }
+  ]
 }
