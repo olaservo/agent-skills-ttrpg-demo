@@ -59,7 +59,8 @@ export function createServer(): McpServer {
   );
 
   // SEP-2640 §Capability Declaration. Must run before server.connect().
-  declareSkillsExtension(server.server);
+  // directoryRead: we implement resources/directory/read (see registerSkillResources).
+  declareSkillsExtension(server.server, { directoryRead: true });
 
   // ── Tool: roll_dice ────────────────────────────────────────────────────
   registerAppTool(
@@ -420,10 +421,13 @@ export function createServer(): McpServer {
 
   // ── Resources: Fallout skills (SEP-2640) ───────────────────────────────
   // Serves fallout-rpg, fallout-machine-frequency, fallout-character-sheets
-  // from ./skills/ as skill:// resources. Also registers skill://index.json
-  // and per-skill resource templates for supporting files.
+  // from ./skills/ as skill:// resources, plus skill://index.json (rich index:
+  // frontmatter + sha256 digest per skill). `directoryRead: true` enables
+  // `resources/directory/read` so a host can walk and materialize each skill's
+  // supporting files (references/, etc.) — the SEP-2640 progressive-disclosure
+  // path. The capability is advertised by declareSkillsExtension() above.
   const skillMap = discoverSkills(SKILLS_DIR);
-  registerSkillResources(server, skillMap, SKILLS_DIR);
+  registerSkillResources(server, skillMap, SKILLS_DIR, { directoryRead: true });
 
   return server;
 }
