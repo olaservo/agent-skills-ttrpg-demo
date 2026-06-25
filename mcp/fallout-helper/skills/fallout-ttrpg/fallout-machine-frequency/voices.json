@@ -1,0 +1,17 @@
+{
+  "scribe galen": "npc_settler",
+  "scribe galen portno": "npc_settler",
+  "galen": "npc_settler",
+  "knight helen layton": "npc_settler",
+  "helen layton": "npc_settler",
+  "helen": "npc_settler",
+  "knight pierce": "npc_raider",
+  "pierce": "npc_raider",
+  "knight macey": "npc_raider",
+  "macey": "npc_raider",
+  "dr akiva trestridge": "npc_overseer",
+  "akiva trestridge": "npc_overseer",
+  "trestridge": "npc_overseer",
+  "sam breckinridge": "npc_settler",
+  "sam": "npc_settler"
+}
