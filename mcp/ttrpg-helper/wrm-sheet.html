@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>Warrior, Rogue &amp; Mage — Character</title>
+</head>
+<body>
+  <main class="wrm" id="wrm">
+    <header class="scroll-header">
+      <span class="title">Adventurer's Charter</span>
+      <span class="status" id="status">Standby</span>
+    </header>
+
+    <section class="hud" id="hud" hidden>
+      <div class="hud-name">
+        <h1 class="hud-title" id="char-name">—</h1>
+        <p class="hud-sub">
+          <span id="char-race">—</span>
+          <span class="sep">·</span>
+          <span id="char-concept">—</span>
+        </p>
+      </div>
+      <ul class="attrs" id="char-attrs">
+        <li><b>Warrior</b><span data-attr="warrior">—</span></li>
+        <li><b>Rogue</b><span data-attr="rogue">—</span></li>
+        <li><b>Mage</b><span data-attr="mage">—</span></li>
+      </ul>
+      <ul class="derived" id="char-derived">
+        <li><b>HP</b><span id="char-hp">—</span></li>
+        <li><b>Mana</b><span id="char-mana">—</span></li>
+        <li><b>Fate</b><span id="char-fate">—</span></li>
+        <li><b>Def</b><span id="char-defense">—</span></li>
+      </ul>
+    </section>
+
+    <section class="body" id="body" hidden>
+      <img class="portrait" id="portrait" alt="" />
+      <article class="sheet-md" id="sheet-md"></article>
+    </section>
+
+    <section class="empty" id="empty">
+      <p>No character loaded. Ask the agent to <code>show_wrm_character_sheet</code>.</p>
+    </section>
+  </main>
+
+  <script type="module" src="/src/wrm-character-app.ts"></script>
+</body>
+</html>

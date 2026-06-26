@@ -22,7 +22,12 @@ const DIST_DIR = import.meta.filename.endsWith(".ts")
   : import.meta.dirname;
 
 // Widget HTML the companion UI fetches. Allow-list, not blanket static.
-const WIDGET_FILES = new Set(["dice-roll.html", "character-sheet.html"]);
+const WIDGET_FILES = new Set([
+  "dice-roll.html",
+  "character-sheet.html",
+  "wrm-dice.html",
+  "wrm-sheet.html",
+]);
 
 export async function startStreamableHTTPServer(
   factory: () => McpServer,

@@ -1,0 +1,117 @@
+/**
+ * Warrior, Rogue & Mage shared widget theme — the fantasy analogue of
+ * pip-boy.css. Where the Fallout widgets are a green CRT terminal, the WR&M
+ * widgets are aged parchment with ink and gold-leaf accents. The CSS-var
+ * contract mirrors pip-boy.css (--wrm-* instead of --pb-*) so the dice and
+ * sheet apps consume the same tokens.
+ */
+:root {
+  --wrm-bg: #efe2c4;        /* parchment */
+  --wrm-bg-deep: #e3d2ab;   /* slightly darker fill for cards */
+  --wrm-fg: #3a2a18;        /* iron-gall ink */
+  --wrm-fg-dim: #7a6242;    /* faded ink */
+  --wrm-accent: #9a6b1f;    /* gold-leaf / illumination */
+  --wrm-accent-bright: #c9952f;
+  --wrm-magic: #5a3b8c;     /* arcane violet (mage / spells) */
+  --wrm-fail: #8e2f2a;      /* wax-seal red */
+  --wrm-rule: #b69a68;      /* hairline rule */
+  --wrm-glow: 0 0 0 transparent; /* parchment has no glow; kept for parity */
+  --wrm-pad: 1rem;
+  --wrm-radius: 3px;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: var(--wrm-bg);
+  color: var(--wrm-fg);
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino,
+    Georgia, "Times New Roman", serif;
+}
+
+body::before {
+  /* Subtle parchment grain / vignette overlay (parallels pip-boy's scanlines). */
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse at center,
+      rgba(58, 42, 24, 0) 55%,
+      rgba(58, 42, 24, 0.12) 100%
+    ),
+    repeating-linear-gradient(
+      135deg,
+      rgba(122, 98, 66, 0) 0px,
+      rgba(122, 98, 66, 0) 6px,
+      rgba(122, 98, 66, 0.025) 7px,
+      rgba(122, 98, 66, 0) 8px
+    );
+  z-index: 9999;
+  mix-blend-mode: multiply;
+}
+
+.wrm {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--wrm-pad);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.scroll-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 2px solid var(--wrm-rule);
+  padding-bottom: 0.5rem;
+  font-weight: bold;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.title {
+  color: var(--wrm-accent);
+}
+
+.status {
+  font-size: 0.85em;
+  color: var(--wrm-fg-dim);
+  font-variant: small-caps;
+  letter-spacing: 0.08em;
+}
+
+.status.rolling {
+  color: var(--wrm-accent);
+  animation: flicker 0.7s ease-in-out infinite;
+}
+
+@keyframes flicker {
+  50% { opacity: 0.4; }
+}
+
+.btn {
+  background: transparent;
+  color: var(--wrm-fg);
+  border: 1px solid var(--wrm-accent);
+  border-radius: var(--wrm-radius);
+  padding: 0.5rem 1rem;
+  font: inherit;
+  font-variant: small-caps;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background 80ms linear, color 80ms linear;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--wrm-accent);
+  color: var(--wrm-bg);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

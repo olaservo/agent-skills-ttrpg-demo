@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" shape-rendering="crispEdges" preserveAspectRatio="xMidYMid meet">
+  <rect width="24" height="24" fill="#efe2c4"/>
+  <!-- Dwarf helm with nose-guard (steel = dim) -->
+  <rect x="8" y="3" width="8" height="1" fill="#7a6242"/>
+  <rect x="7" y="4" width="10" height="2" fill="#7a6242"/>
+  <!-- Helm rivets (gold) -->
+  <rect x="8" y="4" width="1" height="1" fill="#9a6b1f"/>
+  <rect x="15" y="4" width="1" height="1" fill="#9a6b1f"/>
+  <!-- Brow band -->
+  <rect x="8" y="6" width="8" height="1" fill="#3a2a18"/>
+  <!-- Face strip -->
+  <rect x="8" y="7" width="8" height="2" fill="#e3d2ab"/>
+  <!-- Eyes -->
+  <rect x="9" y="7" width="1" height="1" fill="#3a2a18"/>
+  <rect x="14" y="7" width="1" height="1" fill="#3a2a18"/>
+  <!-- Nose guard -->
+  <rect x="11" y="6" width="2" height="3" fill="#7a6242"/>
+  <!-- Great braided beard (dim) -->
+  <rect x="7" y="9" width="10" height="6" fill="#7a6242"/>
+  <rect x="8" y="15" width="8" height="2" fill="#7a6242"/>
+  <!-- Beard braid lines (ink) -->
+  <rect x="9" y="10" width="1" height="6" fill="#3a2a18"/>
+  <rect x="12" y="10" width="1" height="6" fill="#3a2a18"/>
+  <rect x="14" y="10" width="1" height="6" fill="#3a2a18"/>
+  <!-- Beard rings (gold) -->
+  <rect x="11" y="13" width="2" height="1" fill="#9a6b1f"/>
+  <!-- Shoulders / mail -->
+  <rect x="5" y="17" width="14" height="7" fill="#7a6242"/>
+</svg>
