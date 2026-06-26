@@ -68,29 +68,36 @@ interface DieCell {
 const TRAY_HALF_W = 3; // tray spans x ∈ [-3, 3]
 const TRAY_HALF_D = 2; // tray spans z ∈ [-2, 2]
 const DIE_HALF = 0.5; // d6 is a unit cube
-const THROW_STAGGER_MS = 320; // gap between successive dice entering the tray
-const SNAP_MS = 220; // ease duration to the predetermined face
-const REST_LIN = 0.14; // linear speed below which a die counts as "still"
-const REST_ANG = 0.14; // angular speed below which a die counts as "still"
-const REST_FRAMES = 10; // consecutive still frames required to rest
-const REST_TIMEOUT_MS = 2500; // hard backstop: force-rest a stranded die
+const THROW_STAGGER_MS = 180; // pause between one die resting and the next entering
+const FIXED_STEP = 1 / 60; // physics + playback timestep
+const REST_LIN = 0.12; // linear speed below which the die counts as still
+const REST_ANG = 0.12; // angular speed below which the die counts as still
+const REST_FRAMES = 12; // consecutive still steps that end the recording
+const MAX_PREDICT_STEPS = 600; // hard cap on the invisible prediction (~10s)
 const MAX_DICE = 24; // visual guard mirroring the engine's explosion cap
 
 /**
- * Local face normals for each pip value on our cube. BoxGeometry material order
- * is [+X, -X, +Y, -Y, +Z, -Z]; we paint values [1, 6, 2, 5, 3, 4] onto those
- * faces (opposite faces sum to 7, like a real die). To show value V on top, V's
- * local normal must point world-up.
+ * BoxGeometry material order is [+X, -X, +Y, -Y, +Z, -Z]; faces pair up as
+ * (0,1) (2,3) (4,5), i.e. opposite face = index ^ 1. We start with the values
+ * [1, 6, 2, 5, 3, 4] painted on those faces (opposite faces sum to 7, like a
+ * real die), but the *final* value shown up is decided by relabeling whichever
+ * face physically lands up — see relabelToLanding — so we never have to flip the
+ * die to a predetermined face (a flip of up to 180° is what read as "jank").
  */
 const FACE_VALUES = [1, 6, 2, 5, 3, 4];
-const FACE_NORMAL: Record<number, THREE.Vector3> = {
-  1: new THREE.Vector3(1, 0, 0),
-  6: new THREE.Vector3(-1, 0, 0),
-  2: new THREE.Vector3(0, 1, 0),
-  5: new THREE.Vector3(0, -1, 0),
-  3: new THREE.Vector3(0, 0, 1),
-  4: new THREE.Vector3(0, 0, -1),
-};
+const LOCAL_FACE_NORMALS = [
+  new THREE.Vector3(1, 0, 0),
+  new THREE.Vector3(-1, 0, 0),
+  new THREE.Vector3(0, 1, 0),
+  new THREE.Vector3(0, -1, 0),
+  new THREE.Vector3(0, 0, 1),
+  new THREE.Vector3(0, 0, -1),
+];
+const VALUE_PAIRS = [
+  [1, 6],
+  [2, 5],
+  [3, 4],
+];
 
 // ── DOM refs ──────────────────────────────────────────────────────────────
 const root = document.getElementById("wrm")!;
@@ -269,18 +276,23 @@ function makePipTexture(value: number, bg: string, fg: string): THREE.CanvasText
 }
 
 // ── Three.js + cannon-es scene ─────────────────────────────────────────────
+/** One recorded simulation frame: where the die was at fixed step `i`. */
+interface Frame {
+  p: [number, number, number];
+  q: [number, number, number, number];
+}
+
 interface Die {
   mesh: THREE.Mesh;
+  /** Static collision body left at the final resting pose (obstacle for later dice). */
   body: CANNON.Body;
   value: number;
   role: "initial" | "explode";
   kept: boolean;
-  state: "tumbling" | "snapping" | "rested";
-  restFrames: number;
-  deadline: number;
-  snapStart: number;
-  snapFrom: THREE.Quaternion;
-  snapTo: THREE.Quaternion;
+  /** Full tumble recorded by the invisible prediction pass, replayed for the visuals. */
+  trajectory: Frame[];
+  state: "playing" | "rested";
+  playStart: number;
   onRested?: () => void;
 }
 
@@ -290,7 +302,6 @@ let camera: THREE.PerspectiveCamera;
 let world: CANNON.World;
 let dice: Die[] = [];
 let pipTextures: { normal: THREE.CanvasTexture[]; gold: THREE.CanvasTexture[] };
-let lastFrameTime = 0;
 
 function buildScene(): void {
   scene = new THREE.Scene();
@@ -358,7 +369,6 @@ function buildScene(): void {
   };
 
   resizeRenderer();
-  lastFrameTime = performance.now();
   requestAnimationFrame(loop);
 }
 
@@ -381,7 +391,58 @@ function materialsForDie(role: "initial" | "explode", kept: boolean): THREE.Mate
   });
 }
 
-/** Throw one die into the tray; it will tumble then snap to `cell.value`. */
+/** Which local face index points most upward for a given orientation. */
+function upFaceForQuat(q: THREE.Quaternion): number {
+  let iUp = 0;
+  let best = -Infinity;
+  for (let i = 0; i < 6; i++) {
+    const dot = LOCAL_FACE_NORMALS[i]!.clone().applyQuaternion(q).y;
+    if (dot > best) {
+      best = dot;
+      iUp = i;
+    }
+  }
+  return iUp;
+}
+
+/**
+ * Paint the die so its rolled value sits on local face `iUp`, the opposite face
+ * gets 7 − value, and the remaining two axis-pairs get the remaining value-pairs
+ * — a valid die (opposite faces sum to 7). Done up-front, before the die is
+ * shown, so the top face reads correctly the whole tumble (no end-of-roll swap).
+ */
+function paintDie(die: Die, iUp: number): void {
+  const value = die.value;
+  const newValues = new Array<number>(6);
+  newValues[iUp] = value;
+  newValues[iUp ^ 1] = 7 - value;
+
+  const usedLo = Math.min(value, 7 - value);
+  const remainPairs = VALUE_PAIRS.filter((p) => p[0] !== usedLo);
+  const remainAxes = [
+    [0, 1],
+    [2, 3],
+    [4, 5],
+  ].filter(([a, b]) => a !== iUp && b !== iUp);
+  remainAxes.forEach(([a, b], k) => {
+    newValues[a!] = remainPairs[k]![0]!;
+    newValues[b!] = remainPairs[k]![1]!;
+  });
+
+  const set = die.role === "explode" ? pipTextures.gold : pipTextures.normal;
+  const mats = die.mesh.material as THREE.MeshStandardMaterial[];
+  for (let i = 0; i < 6; i++) {
+    mats[i]!.map = set[newValues[i]! - 1]!;
+    mats[i]!.needsUpdate = true;
+  }
+}
+
+/**
+ * Throw one die: simulate its whole tumble *invisibly* to learn which face lands
+ * up, paint the rolled value onto that face before showing anything, then leave
+ * the recorded trajectory to be replayed by the render loop. The body is frozen
+ * static at its final pose so later dice in the chain collide with it.
+ */
 function spawnDie(cell: DieCell, onRested?: () => void): void {
   const geo = new THREE.BoxGeometry(1, 1, 1);
   const mesh = new THREE.Mesh(geo, materialsForDie(cell.role, cell.kept));
@@ -400,8 +461,8 @@ function spawnDie(cell: DieCell, onRested?: () => void): void {
     mass: 1,
     shape: new CANNON.Box(new CANNON.Vec3(DIE_HALF, DIE_HALF, DIE_HALF)),
   });
-  // Drop from above with randomized spin/velocity (visual only — the face is
-  // not left to chance; it is snapped to cell.value on rest).
+  // Drop from above with randomized spin/velocity (visual variety only — which
+  // face lands up doesn't matter; we paint the rolled value onto it).
   const rand = (m: number) => (Math.random() * 2 - 1) * m;
   body.position.set(rand(TRAY_HALF_W - 1), 5 + Math.random() * 1.5, rand(TRAY_HALF_D - 1));
   body.velocity.set(rand(2.5), -2, rand(2.5));
@@ -409,82 +470,67 @@ function spawnDie(cell: DieCell, onRested?: () => void): void {
   body.quaternion.setFromEuler(rand(Math.PI), rand(Math.PI), rand(Math.PI));
   world.addBody(body);
 
-  mesh.position.set(body.position.x, body.position.y, body.position.z);
-  mesh.quaternion.set(
-    body.quaternion.x,
-    body.quaternion.y,
-    body.quaternion.z,
-    body.quaternion.w,
-  );
+  // Invisible prediction pass: step the (single dynamic body) world to rest,
+  // recording every frame. Earlier dice are already static, so this is the exact
+  // tumble we will replay.
+  const trajectory: Frame[] = [];
+  let restFrames = 0;
+  for (let i = 0; i < MAX_PREDICT_STEPS; i++) {
+    world.step(FIXED_STEP);
+    trajectory.push({
+      p: [body.position.x, body.position.y, body.position.z],
+      q: [body.quaternion.x, body.quaternion.y, body.quaternion.z, body.quaternion.w],
+    });
+    const still =
+      body.velocity.length() < REST_LIN && body.angularVelocity.length() < REST_ANG;
+    restFrames = still ? restFrames + 1 : 0;
+    if (restFrames >= REST_FRAMES) break;
+  }
 
-  dice.push({
+  // Freeze the body at its final pose as a static obstacle for later dice.
+  body.velocity.setZero();
+  body.angularVelocity.setZero();
+  body.type = CANNON.Body.STATIC;
+  body.updateMassProperties();
+
+  const last = trajectory[trajectory.length - 1]!;
+  const iUp = upFaceForQuat(new THREE.Quaternion(last.q[0], last.q[1], last.q[2], last.q[3]));
+
+  const first = trajectory[0]!;
+  mesh.position.set(first.p[0], first.p[1], first.p[2]);
+  mesh.quaternion.set(first.q[0], first.q[1], first.q[2], first.q[3]);
+
+  const die: Die = {
     mesh,
     body,
     value: cell.value,
     role: cell.role,
     kept: cell.kept,
-    state: "tumbling",
-    restFrames: 0,
-    deadline: performance.now() + REST_TIMEOUT_MS,
-    snapStart: 0,
-    snapFrom: new THREE.Quaternion(),
-    snapTo: new THREE.Quaternion(),
+    trajectory,
+    state: "playing",
+    playStart: performance.now(),
     onRested,
-  });
-}
-
-function beginSnap(die: Die, now: number): void {
-  // Freeze the body so it becomes a static platform for later dice.
-  die.body.velocity.setZero();
-  die.body.angularVelocity.setZero();
-  die.body.type = CANNON.Body.STATIC;
-  die.body.updateMassProperties();
-
-  // Minimal-arc rotation that brings the target face's normal to world-up,
-  // preserving the settled yaw as much as possible.
-  const current = die.mesh.quaternion.clone();
-  const worldNormal = FACE_NORMAL[die.value].clone().applyQuaternion(current).normalize();
-  const align = new THREE.Quaternion().setFromUnitVectors(
-    worldNormal,
-    new THREE.Vector3(0, 1, 0),
-  );
-  die.snapFrom = current;
-  die.snapTo = new THREE.Quaternion().multiplyQuaternions(align, current);
-  die.snapStart = now;
-  die.state = "snapping";
+  };
+  paintDie(die, iUp);
+  dice.push(die);
 }
 
 function loop(): void {
   requestAnimationFrame(loop);
   const now = performance.now();
-  const dt = Math.min((now - lastFrameTime) / 1000, 1 / 30);
-  lastFrameTime = now;
-  world.step(1 / 60, dt, 3);
 
   for (const die of dice) {
-    if (die.state === "tumbling") {
-      die.mesh.position.set(die.body.position.x, die.body.position.y, die.body.position.z);
-      die.mesh.quaternion.set(
-        die.body.quaternion.x,
-        die.body.quaternion.y,
-        die.body.quaternion.z,
-        die.body.quaternion.w,
-      );
-      const still =
-        die.body.velocity.length() < REST_LIN && die.body.angularVelocity.length() < REST_ANG;
-      die.restFrames = still ? die.restFrames + 1 : 0;
-      if (die.restFrames >= REST_FRAMES || now >= die.deadline) beginSnap(die, now);
-    } else if (die.state === "snapping") {
-      const t = Math.min((now - die.snapStart) / SNAP_MS, 1);
-      const eased = t * (2 - t); // easeOutQuad
-      die.mesh.quaternion.slerpQuaternions(die.snapFrom, die.snapTo, eased);
-      die.mesh.position.set(die.body.position.x, die.body.position.y, die.body.position.z);
-      if (t >= 1) {
-        die.state = "rested";
-        const cb = die.onRested;
-        die.onRested = undefined;
-        cb?.();
-      }
+    if (die.state !== "playing") continue;
+    const last = die.trajectory.length - 1;
+    const idx = Math.min(Math.floor((now - die.playStart) / 1000 / FIXED_STEP), last);
+    const f = die.trajectory[idx]!;
+    die.mesh.position.set(f.p[0], f.p[1], f.p[2]);
+    die.mesh.quaternion.set(f.q[0], f.q[1], f.q[2], f.q[3]);
+    if (idx >= last) {
+      die.state = "rested";
+      const cb = die.onRested;
+      die.onRested = undefined;
+      cb?.();
     }
   }
 
@@ -519,24 +565,14 @@ async function animateAndRender(result: WrmRollResult): Promise<void> {
   resetScene();
 
   const cells = cellsFor(result).slice(0, MAX_DICE);
-  let remaining = cells.length;
-  let resolveAll!: () => void;
-  const allRested = new Promise<void>((resolve) => {
-    resolveAll = resolve;
-  });
-  if (remaining === 0) resolveAll();
 
-  // Throw the dice in one at a time so they clatter into the tray in sequence
-  // (the initial die/dice first, then one per exploding 6). Each resolves the
-  // shared promise as it comes to rest and snaps to its predetermined face.
+  // Throw the dice one at a time, each fully landing before the next enters, so
+  // every prediction sees a fully-static tray (the initial die/dice first, then
+  // one gold die per exploding 6).
   for (let i = 0; i < cells.length; i++) {
-    spawnDie(cells[i]!, () => {
-      remaining -= 1;
-      if (remaining === 0) resolveAll();
-    });
+    await new Promise<void>((resolve) => spawnDie(cells[i]!, resolve));
     if (i < cells.length - 1) await delay(THROW_STAGGER_MS);
   }
-  await allRested;
 
   renderSummary(result);
   setStatus(result.passed ? "Success" : "Failure", false);
