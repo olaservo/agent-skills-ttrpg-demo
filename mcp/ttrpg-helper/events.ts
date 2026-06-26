@@ -10,8 +10,11 @@
 import type { Response } from "express";
 
 export interface ToolEvent {
-  /** `tool_result` carries a widget payload; `choice_prompt` is a no-widget elicitation surfaced for display. */
-  type: "tool_result" | "choice_prompt";
+  /**
+   * `tool_result` carries a widget payload; `choice_prompt` is a no-widget elicitation
+   * surfaced for display; `transcript` is a spoken/heard line for the live conversation log.
+   */
+  type: "tool_result" | "choice_prompt" | "transcript";
   /** Monotonic per-process sequence — the UI uses it as a React key to force a fresh widget per call. */
   seq: number;
   ts: number;
@@ -26,6 +29,13 @@ export interface ToolEvent {
   // choice_prompt extras:
   prompt?: string;
   options?: unknown;
+  // transcript extras:
+  /** Who spoke: `assistant` = the DM (narration or a character voice), `user` = the player. */
+  role?: "user" | "assistant";
+  /** The spoken/transcribed text. */
+  text?: string;
+  /** For `assistant` lines spoken via `speak_as`, the character voice id. */
+  voice?: string;
 }
 
 const subscribers = new Set<Response>();
@@ -55,4 +65,17 @@ export function publishToolEvent(evt: Omit<ToolEvent, "seq" | "ts">): ToolEvent 
 
 export function subscriberCount(): number {
   return subscribers.size;
+}
+
+/**
+ * Broadcast a spoken/heard line to all subscribers (e.g. the companion transcript panel).
+ * `role` is `assistant` for the DM (narration or a `speak_as` character voice) or `user`
+ * for the player's transcribed speech; `voice` is the character voice id when present.
+ */
+export function publishTranscript(
+  role: "user" | "assistant",
+  text: string,
+  voice?: string,
+): ToolEvent {
+  return publishToolEvent({ type: "transcript", toolName: "transcript", role, text, voice });
 }
