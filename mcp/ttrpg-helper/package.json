@@ -9,14 +9,16 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc --noEmit && cross-env INPUT=dice-roll.html vite build && cross-env INPUT=character-sheet.html vite build && tsc -p tsconfig.server.json && bun build server.ts --outdir dist --target node && bun build main.ts --outfile dist/index.js --target node --external \"./server.js\" --banner \"#!/usr/bin/env node\"",
+    "build": "tsc --noEmit && cross-env INPUT=dice-roll.html vite build && cross-env INPUT=character-sheet.html vite build && cross-env INPUT=wrm-dice.html vite build && cross-env INPUT=wrm-sheet.html vite build && tsc -p tsconfig.server.json && bun build server.ts --outdir dist --target node && bun build main.ts --outfile dist/index.js --target node --external \"./server.js\" --banner \"#!/usr/bin/env node\"",
     "watch:dice": "cross-env INPUT=dice-roll.html vite build --watch",
     "watch:sheet": "cross-env INPUT=character-sheet.html vite build --watch",
+    "watch:wrm-dice": "cross-env INPUT=wrm-dice.html vite build --watch",
+    "watch:wrm-sheet": "cross-env INPUT=wrm-sheet.html vite build --watch",
     "serve": "bun --watch main.ts",
     "serve:stdio": "bun main.ts --stdio",
     "start": "cross-env NODE_ENV=development npm run build && npm run serve",
     "start:stdio": "cross-env NODE_ENV=development npm run build 1>&2 && npm run serve:stdio",
-    "dev": "cross-env NODE_ENV=development concurrently \"npm run watch:dice\" \"npm run watch:sheet\" \"npm run serve\"",
+    "dev": "cross-env NODE_ENV=development concurrently \"npm run watch:dice\" \"npm run watch:sheet\" \"npm run watch:wrm-dice\" \"npm run watch:wrm-sheet\" \"npm run serve\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "prepublishOnly": "npm run build",

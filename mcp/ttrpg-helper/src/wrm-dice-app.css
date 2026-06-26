@@ -1,0 +1,200 @@
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.85em;
+  color: var(--wrm-fg-dim);
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+}
+
+.meta .dot {
+  opacity: 0.5;
+}
+
+.meta .meta-mode,
+.meta #meta-mode {
+  color: var(--wrm-magic);
+}
+
+.meta .meta-explode,
+.meta #meta-explode {
+  color: var(--wrm-accent);
+}
+
+/* ── Dice tray ──────────────────────────────────────────────────────────── */
+.dice-tray {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0;
+}
+
+.die-op {
+  font-size: 1.4rem;
+  color: var(--wrm-fg-dim);
+  font-weight: bold;
+}
+
+.die {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  border: 2px solid var(--wrm-rule);
+  border-radius: var(--wrm-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--wrm-bg-deep);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  transition: border-color 140ms linear, box-shadow 220ms linear, color 220ms linear,
+    opacity 220ms linear;
+}
+
+.die .face {
+  font-size: 2.4rem;
+  font-weight: bold;
+  line-height: 1;
+  color: var(--wrm-fg);
+}
+
+.die .chip {
+  position: absolute;
+  bottom: 5px;
+  left: 4px;
+  right: 4px;
+  font-size: 0.6rem;
+  text-align: center;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--wrm-fg-dim);
+  opacity: 0;
+  transition: opacity 200ms linear 180ms;
+}
+
+.die.tumbling {
+  border-color: var(--wrm-accent);
+}
+
+.die.tumbling .face {
+  animation: jitter 90ms steps(2, end) infinite;
+  color: var(--wrm-fg-dim);
+}
+
+@keyframes jitter {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  50%  { transform: translate(0, -1px) rotate(-3deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+/* Settled initial die */
+.die.initial {
+  border-color: var(--wrm-fg-dim);
+}
+
+/* Exploding die — gold accent (a 6 begat it) */
+.die.explode {
+  border-color: var(--wrm-accent);
+  box-shadow: 0 0 10px rgba(154, 107, 31, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.die.explode .chip {
+  color: var(--wrm-accent);
+  opacity: 1;
+  font-weight: bold;
+}
+
+/* A die showing a 6 (triggered an explosion) */
+.die.six .face {
+  color: var(--wrm-accent);
+}
+
+/* Dropped initial die under advantage/disadvantage */
+.die.dropped {
+  opacity: 0.4;
+  border-style: dashed;
+}
+
+.die.dropped .face {
+  color: var(--wrm-fg-dim);
+  text-decoration: line-through;
+}
+
+.die.dropped .chip {
+  color: var(--wrm-fg-dim);
+  opacity: 1;
+}
+
+/* ── Summary panel ──────────────────────────────────────────────────────── */
+.summary {
+  border-top: 2px solid var(--wrm-rule);
+  border-bottom: 2px solid var(--wrm-rule);
+  padding: 0.75rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  opacity: 0;
+  transition: opacity 350ms ease-in;
+}
+
+.summary.visible {
+  opacity: 1;
+}
+
+.summary .line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  letter-spacing: 0.03em;
+}
+
+.summary .label {
+  font-variant: small-caps;
+  color: var(--wrm-fg-dim);
+  font-size: 0.9em;
+}
+
+.summary .val {
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+.summary .total-line {
+  border-top: 1px dotted var(--wrm-rule);
+  padding-top: 0.3rem;
+  margin-top: 0.1rem;
+}
+
+.summary .total-line .val {
+  color: var(--wrm-accent);
+  font-size: 1.3em;
+}
+
+.summary .outcome-line {
+  justify-content: center;
+  padding: 0.5rem 0 0.2rem;
+}
+
+.summary .outcome {
+  font-weight: bold;
+  font-size: 1.3em;
+  letter-spacing: 0.08em;
+  font-variant: small-caps;
+  text-align: center;
+}
+
+.summary .outcome.pass {
+  color: var(--wrm-accent);
+}
+
+.summary .outcome.fail {
+  color: var(--wrm-fail);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+}
