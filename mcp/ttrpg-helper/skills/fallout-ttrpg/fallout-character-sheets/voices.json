@@ -1,0 +1,10 @@
+{
+  "characters": [
+    { "names": ["Augusta Byron"], "voice_id": "augusta_byron" },
+    { "names": ["Tommy Doyle", "Happy Tommy Doyle"], "voice_id": "tommy_doyle" },
+    { "names": ["Bailey Bigsmile"], "voice_id": "bailey_bigsmile" },
+    { "names": ["Old Tallman"], "voice_id": "old_tallman" },
+    { "names": ["Hazel Johnson"], "voice_id": "hazel_johnson" },
+    { "names": ["Marvin"], "voice_id": "marvin" }
+  ]
+}

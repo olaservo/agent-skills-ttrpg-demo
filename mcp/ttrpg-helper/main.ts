@@ -10,11 +10,12 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import cors from "cors";
+import express from "express";
 import type { Request, Response } from "express";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { createServer } from "./server.js";
-import { addSubscriber, removeSubscriber } from "./events.js";
+import { addSubscriber, removeSubscriber, publishTranscript } from "./events.js";
 
 // Mirror server.ts: works from source (main.ts) and compiled (dist/index.js).
 const DIST_DIR = import.meta.filename.endsWith(".ts")
@@ -66,6 +67,20 @@ export async function startStreamableHTTPServer(
       clearInterval(heartbeat);
       removeSubscriber(res);
     });
+  });
+
+  // ── Ingest: spoken/heard lines from the cascade → rebroadcast on /events ──
+  // The Reachy cascade fire-and-forgets a POST here per utterance (DM speech +
+  // player STT). Non-essential: a bad/empty body is ignored, never throws.
+  app.post("/transcript", express.json(), (req: Request, res: Response) => {
+    const { role, text, voice } = req.body ?? {};
+    const t = typeof text === "string" ? text.trim() : "";
+    if (!t || (role !== "user" && role !== "assistant")) {
+      res.status(400).json({ ok: false, error: "role ('user'|'assistant') and non-empty text required" });
+      return;
+    }
+    publishTranscript(role, t, typeof voice === "string" ? voice : undefined);
+    res.json({ ok: true });
   });
 
   // ── Static widget HTML (single source of truth; phone fetches these) ────
