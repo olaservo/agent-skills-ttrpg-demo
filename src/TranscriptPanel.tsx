@@ -22,10 +22,10 @@ export function TranscriptPanel({ lines }: { lines: ToolEvent[] }) {
         minHeight: 96,
         display: "flex",
         flexDirection: "column",
-        borderTop: "1px solid #143a22",
-        background: "#040f08",
-        color: "#7CFC8A",
-        fontFamily: "monospace",
+        borderTop: "1px solid var(--border)",
+        background: "var(--panel)",
+        color: "var(--fg)",
+        fontFamily: "var(--font)",
         boxSizing: "border-box",
       }}
     >
@@ -35,7 +35,7 @@ export function TranscriptPanel({ lines }: { lines: ToolEvent[] }) {
           fontSize: 11,
           letterSpacing: 1,
           opacity: 0.55,
-          borderBottom: "1px solid #0d2616",
+          borderBottom: "1px solid var(--border-soft)",
           flex: "0 0 auto",
         }}
       >
@@ -57,14 +57,14 @@ function TranscriptLine({ line }: { line: ToolEvent }) {
   const isPlayer = line.role === "user";
   // DM lines tag with the character voice when spoken via speak_as, else "DM".
   const tag = isPlayer ? "PLAYER" : (line.voice || "DM").toUpperCase();
-  const tagColor = isPlayer ? "#5ad1ff" : "#7CFC8A";
+  const tagColor = isPlayer ? "var(--player)" : "var(--fg)";
 
   return (
     <div style={{ marginBottom: 8, lineHeight: 1.4 }}>
       <span style={{ fontSize: 10, opacity: 0.7, color: tagColor, marginRight: 6 }}>
         {tag}
       </span>
-      <span style={{ fontSize: 14, color: isPlayer ? "#b8f0c4" : "#dffbe6" }}>
+      <span style={{ fontSize: 14, color: isPlayer ? "var(--player-text)" : "var(--dm-text)" }}>
         {line.text}
       </span>
     </div>

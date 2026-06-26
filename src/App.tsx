@@ -6,6 +6,7 @@ import { useToolEvents } from "./useToolEvents";
 import { widgetUrl } from "./serverBase";
 import { ChoiceCard } from "./ChoiceCard";
 import { TranscriptPanel } from "./TranscriptPanel";
+import { applyTheme, gameForTool } from "./theme";
 import type { ToolEvent } from "./types";
 
 /** Keep the live conversation log from growing without bound. */
@@ -38,7 +39,16 @@ export function App() {
   // already updated in place via callServerTool's return value).
   const localCall = useRef<{ tool: string; until: number } | null>(null);
 
+  // Default (neutral) theme until a game-specific tool reveals the active game.
+  useEffect(() => {
+    applyTheme("default");
+  }, []);
+
   const onEvent = useCallback((evt: ToolEvent) => {
+    // Game-driven theming: a game-specific tool (roll_wrm, show_character_sheet, …) switches
+    // the companion's palette to that game. Game-agnostic tools/transcript leave it unchanged.
+    const game = gameForTool(evt.toolName);
+    if (game) applyTheme(game);
     if (evt.type === "transcript") {
       // Independent of the widget/choice/idle view machine — just append to the log,
       // so a spoken line never disturbs the widget currently on screen.
@@ -104,7 +114,7 @@ export function App() {
         minHeight: "100dvh",
         display: "flex",
         flexDirection: "column",
-        background: "#05140a",
+        background: "var(--bg)",
         boxSizing: "border-box",
       }}
     >
@@ -114,10 +124,10 @@ export function App() {
           justifyContent: "space-between",
           alignItems: "center",
           padding: "6px 10px",
-          color: "#7CFC8A",
-          fontFamily: "monospace",
+          color: "var(--fg)",
+          fontFamily: "var(--font)",
           fontSize: 12,
-          borderBottom: "1px solid #143a22",
+          borderBottom: "1px solid var(--border)",
         }}
       >
         <span>REACHY-DM · companion</span>
@@ -137,8 +147,8 @@ export function App() {
               height: "100%",
               display: "grid",
               placeItems: "center",
-              color: "#7CFC8A",
-              fontFamily: "monospace",
+              color: "var(--fg)",
+              fontFamily: "var(--font)",
               opacity: 0.6,
               textAlign: "center",
               padding: 24,
@@ -175,8 +185,8 @@ export function App() {
                 height: "100%",
                 display: "grid",
                 placeItems: "center",
-                color: "#7CFC8A",
-                fontFamily: "monospace",
+                color: "var(--fg)",
+                fontFamily: "var(--font)",
               }}
             >
               Loading widget…

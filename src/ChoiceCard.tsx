@@ -15,14 +15,14 @@ export function ChoiceCard({ event }: { event: ToolEvent }) {
         gap: 16,
         padding: 20,
         boxSizing: "border-box",
-        color: "#7CFC8A",
-        fontFamily: "'Courier New', monospace",
-        background: "radial-gradient(circle at 50% 0%, #0b2a16 0%, #05140a 70%)",
+        color: "var(--fg)",
+        fontFamily: "var(--font)",
+        background: "radial-gradient(circle at 50% 0%, var(--grad-top) 0%, var(--bg) 70%)",
         overflowY: "auto",
       }}
     >
       <div style={{ fontSize: 12, letterSpacing: 2, opacity: 0.7 }}>▸ PLAYER CHOICE</div>
-      <div style={{ fontSize: 20, lineHeight: 1.4, textShadow: "0 0 8px #2f8" }}>
+      <div style={{ fontSize: 20, lineHeight: 1.4, textShadow: "0 0 8px var(--glow)" }}>
         {event.prompt}
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 8 }}>
@@ -30,10 +30,10 @@ export function ChoiceCard({ event }: { event: ToolEvent }) {
           <div
             key={o.id}
             style={{
-              border: "1px solid #2f8a4a",
+              border: "1px solid var(--opt-border)",
               borderRadius: 10,
               padding: "12px 14px",
-              background: "rgba(47,138,74,0.08)",
+              background: "var(--opt-bg)",
             }}
           >
             <div style={{ fontWeight: 700 }}>
