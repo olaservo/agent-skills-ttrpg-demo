@@ -33,7 +33,13 @@ const SKILLS_DIR = import.meta.filename.endsWith(".ts")
 const DICE_UI_URI = "ui://ttrpg-helper/dice-roll.html";
 const SHEET_UI_URI = "ui://ttrpg-helper/character-sheet.html";
 const WRM_DICE_UI_URI = "ui://ttrpg-helper/wrm-dice.html";
+const WRM_DICE_3D_UI_URI = "ui://ttrpg-helper/wrm-dice-3d.html";
 const WRM_SHEET_UI_URI = "ui://ttrpg-helper/wrm-sheet.html";
+
+// Which dice widget roll_wrm drives. The 2D parchment tray is the shipping
+// default; set WRM_DICE_3D=1 to A/B the experimental Three.js tray. Both
+// resources are always registered — only the tool's pointer flips.
+const WRM_DICE_ACTIVE_URI = process.env.WRM_DICE_3D ? WRM_DICE_3D_UI_URI : WRM_DICE_UI_URI;
 
 // Slug -> reference filename. Slugs are stable IDs the agent passes to
 // `show_character_sheet`; the numeric prefix on disk just orders the roster.
@@ -506,7 +512,7 @@ export function createServer(): McpServer {
         passed: z.boolean(),
         margin: z.number(),
       },
-      _meta: { ui: { resourceUri: WRM_DICE_UI_URI } },
+      _meta: { ui: { resourceUri: WRM_DICE_ACTIVE_URI } },
     },
     async (args): Promise<CallToolResult> => {
       const result = rollWrm(args);
@@ -514,7 +520,7 @@ export function createServer(): McpServer {
       publishToolEvent({
         type: "tool_result",
         toolName: "roll_wrm",
-        resourceUri: WRM_DICE_UI_URI,
+        resourceUri: WRM_DICE_ACTIVE_URI,
         arguments: args,
         structuredContent: result,
         content,
@@ -655,6 +661,28 @@ export function createServer(): McpServer {
         contents: [
           {
             uri: WRM_DICE_UI_URI,
+            mimeType: RESOURCE_MIME_TYPE,
+            text: html,
+            // The widget ships its own parchment chrome — opt out of host border.
+            _meta: { ui: { prefersBorder: false } },
+          },
+        ],
+      };
+    },
+  );
+
+  // ── Resource: WR&M 3D dice UI (experimental Three.js tray) ─────────────
+  registerAppResource(
+    server,
+    WRM_DICE_3D_UI_URI,
+    WRM_DICE_3D_UI_URI,
+    { mimeType: RESOURCE_MIME_TYPE },
+    async (): Promise<ReadResourceResult> => {
+      const html = await fs.readFile(path.join(DIST_DIR, "wrm-dice-3d.html"), "utf-8");
+      return {
+        contents: [
+          {
+            uri: WRM_DICE_3D_UI_URI,
             mimeType: RESOURCE_MIME_TYPE,
             text: html,
             // The widget ships its own parchment chrome — opt out of host border.

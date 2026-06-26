@@ -26,6 +26,7 @@ const WIDGET_FILES = new Set([
   "dice-roll.html",
   "character-sheet.html",
   "wrm-dice.html",
+  "wrm-dice-3d.html",
   "wrm-sheet.html",
 ]);
 
