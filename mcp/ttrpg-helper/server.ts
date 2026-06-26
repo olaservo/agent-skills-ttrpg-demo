@@ -24,14 +24,16 @@ const DIST_DIR = import.meta.filename.endsWith(".ts")
   ? path.join(import.meta.dirname, "dist")
   : import.meta.dirname;
 
-// Skills live at mcp/fallout-helper/skills/. In dev (server.ts) that's a
+// Skills live at mcp/ttrpg-helper/skills/. In dev (server.ts) that's a
 // sibling of this file; in prod (dist/server.js) it's one level up.
 const SKILLS_DIR = import.meta.filename.endsWith(".ts")
   ? path.join(import.meta.dirname, "skills")
   : path.join(import.meta.dirname, "..", "skills");
 
-const DICE_UI_URI = "ui://fallout-helper/dice-roll.html";
-const SHEET_UI_URI = "ui://fallout-helper/character-sheet.html";
+const DICE_UI_URI = "ui://ttrpg-helper/dice-roll.html";
+const SHEET_UI_URI = "ui://ttrpg-helper/character-sheet.html";
+const WRM_DICE_UI_URI = "ui://ttrpg-helper/wrm-dice.html";
+const WRM_SHEET_UI_URI = "ui://ttrpg-helper/wrm-sheet.html";
 
 // Slug -> reference filename. Slugs are stable IDs the agent passes to
 // `show_character_sheet`; the numeric prefix on disk just orders the roster.
@@ -114,7 +116,9 @@ export function createServer(): McpServer {
   );
 
   // SEP-2640 §Capability Declaration. Must run before server.connect().
-  declareSkillsExtension(server.server);
+  // directoryRead: we implement resources/directory/read so skill references +
+  // voices.json travel on install (not just SKILL.md). Requires ext-skills >= 0.11.0.
+  declareSkillsExtension(server.server, { directoryRead: true });
 
   // Names of every tool we register, so we can validate each skill's
   // `metadata.tools` declaration against what the server actually provides.
@@ -440,8 +444,9 @@ export function createServer(): McpServer {
   // ── Tool: roll_wrm ─────────────────────────────────────────────────────
   // Warrior, Rogue & Mage d6 system: 1d6 + attribute (+2 skill) vs a Difficulty
   // Level, with exploding 6s. A different system from roll_dice (Fallout 2d20),
-  // so it is its own tool. No UI iframe yet — registered with the plain API.
-  server.registerTool(
+  // so it is its own tool — and its own parchment-themed exploding-d6 widget.
+  registerAppTool(
+    server,
     "roll_wrm",
     {
       title: "Roll Warrior, Rogue & Mage Dice",
@@ -501,6 +506,7 @@ export function createServer(): McpServer {
         passed: z.boolean(),
         margin: z.number(),
       },
+      _meta: { ui: { resourceUri: WRM_DICE_UI_URI } },
     },
     async (args): Promise<CallToolResult> => {
       const result = rollWrm(args);
@@ -508,6 +514,7 @@ export function createServer(): McpServer {
       publishToolEvent({
         type: "tool_result",
         toolName: "roll_wrm",
+        resourceUri: WRM_DICE_UI_URI,
         arguments: args,
         structuredContent: result,
         content,
@@ -522,8 +529,10 @@ export function createServer(): McpServer {
 
   // ── Tool: show_wrm_character_sheet ─────────────────────────────────────
   // Loads a WR&M pregen sheet via its own parser (three attributes, formula
-  // derived stats, no levels) — distinct from the Fallout S.P.E.C.I.A.L. sheet.
-  server.registerTool(
+  // derived stats, no levels) — distinct from the Fallout S.P.E.C.I.A.L. sheet,
+  // and rendered by its own parchment-themed sheet widget.
+  registerAppTool(
+    server,
     "show_wrm_character_sheet",
     {
       title: "Show Warrior, Rogue & Mage Character Sheet",
@@ -558,6 +567,7 @@ export function createServer(): McpServer {
         spells: z.array(z.string()),
         markdown: z.string(),
       },
+      _meta: { ui: { resourceUri: WRM_SHEET_UI_URI } },
     },
     async (args): Promise<CallToolResult> => {
       const characterId = args.characterId as WrmCharacterId;
@@ -580,6 +590,7 @@ export function createServer(): McpServer {
       publishToolEvent({
         type: "tool_result",
         toolName: "show_wrm_character_sheet",
+        resourceUri: WRM_SHEET_UI_URI,
         arguments: args,
         structuredContent,
         content,
@@ -632,12 +643,55 @@ export function createServer(): McpServer {
     },
   );
 
+  // ── Resource: WR&M dice UI ─────────────────────────────────────────────
+  registerAppResource(
+    server,
+    WRM_DICE_UI_URI,
+    WRM_DICE_UI_URI,
+    { mimeType: RESOURCE_MIME_TYPE },
+    async (): Promise<ReadResourceResult> => {
+      const html = await fs.readFile(path.join(DIST_DIR, "wrm-dice.html"), "utf-8");
+      return {
+        contents: [
+          {
+            uri: WRM_DICE_UI_URI,
+            mimeType: RESOURCE_MIME_TYPE,
+            text: html,
+            // The widget ships its own parchment chrome — opt out of host border.
+            _meta: { ui: { prefersBorder: false } },
+          },
+        ],
+      };
+    },
+  );
+
+  // ── Resource: WR&M character-sheet UI ──────────────────────────────────
+  registerAppResource(
+    server,
+    WRM_SHEET_UI_URI,
+    WRM_SHEET_UI_URI,
+    { mimeType: RESOURCE_MIME_TYPE },
+    async (): Promise<ReadResourceResult> => {
+      const html = await fs.readFile(path.join(DIST_DIR, "wrm-sheet.html"), "utf-8");
+      return {
+        contents: [
+          {
+            uri: WRM_SHEET_UI_URI,
+            mimeType: RESOURCE_MIME_TYPE,
+            text: html,
+            _meta: { ui: { prefersBorder: false } },
+          },
+        ],
+      };
+    },
+  );
+
   // ── Resources: Fallout skills (SEP-2640) ───────────────────────────────
   // Serves fallout-rpg, fallout-machine-frequency, fallout-character-sheets
   // from ./skills/ as skill:// resources. Also registers skill://index.json
   // and per-skill resource templates for supporting files.
   const skillMap = discoverSkills(SKILLS_DIR);
-  registerSkillResources(server, skillMap, SKILLS_DIR);
+  registerSkillResources(server, skillMap, SKILLS_DIR, { directoryRead: true });
 
   // ── Validate skill tool declarations ───────────────────────────────────
   // Each SKILL.md may declare the MCP tools it needs in `metadata.tools` (a

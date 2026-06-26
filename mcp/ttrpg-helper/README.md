@@ -1,4 +1,4 @@
-# fallout-helper-mcp
+# ttrpg-helper-mcp
 
 MCP App server for *Fallout: The Roleplaying Game* (Modiphius 2d20 system). Provides:
 
@@ -12,18 +12,18 @@ This server replaces the Python `scripts/roll_test.py` that the `fallout-rpg` ag
 
 ### MCPB (one-click, Claude Desktop)
 
-Download `fallout-helper-mcp.mcpb` from a GitHub release and open it in Claude Desktop.
+Download `ttrpg-helper-mcp.mcpb` from a GitHub release and open it in Claude Desktop.
 
 ### Build from source
 
 ```json
 {
   "mcpServers": {
-    "fallout-helper": {
+    "ttrpg-helper": {
       "command": "bash",
       "args": [
         "-c",
-        "cd /path/to/agent-skills-ttrpg-demo/mcp/fallout-helper && npm run build >&2 && node dist/index.js --stdio"
+        "cd /path/to/agent-skills-ttrpg-demo/mcp/ttrpg-helper && npm run build >&2 && node dist/index.js --stdio"
       ]
     }
   }
@@ -42,7 +42,7 @@ npm run start:stdio     # stdio transport
 
 ## Packaging
 
-`npm run pack` builds, prunes to production deps, and produces `fallout-helper-mcp.mcpb` at the package root via `@anthropic-ai/mcpb`. The script restores devDependencies after packing.
+`npm run pack` builds, prunes to production deps, and produces `ttrpg-helper-mcp.mcpb` at the package root via `@anthropic-ai/mcpb`. The script restores devDependencies after packing.
 
 ## Tools
 

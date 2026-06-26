@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>Warrior, Rogue &amp; Mage — Dice</title>
+</head>
+<body>
+  <main class="wrm" id="wrm">
+    <header class="scroll-header">
+      <span class="title">Warrior · Rogue · Mage</span>
+      <span class="status" id="status">Standby</span>
+    </header>
+
+    <section class="meta" id="meta" hidden>
+      <span id="meta-attr"></span>
+      <span class="dot meta-skill" hidden id="meta-skill-dot">·</span>
+      <span id="meta-skill" hidden></span>
+      <span class="dot meta-bonus" hidden id="meta-bonus-dot">·</span>
+      <span id="meta-bonus" hidden></span>
+      <span class="dot">·</span>
+      <span id="meta-dl"></span>
+      <span class="dot meta-mode" hidden id="meta-mode-dot">·</span>
+      <span id="meta-mode" hidden></span>
+      <span class="dot meta-explode" hidden id="meta-explode-dot">·</span>
+      <span id="meta-explode" hidden></span>
+    </section>
+
+    <section class="dice-tray" id="dice-tray" aria-live="polite"></section>
+
+    <section class="summary" id="summary" hidden>
+      <div class="line"><span class="label">Dice total</span><span class="val" id="die-total">0</span></div>
+      <div class="line"><span class="label">+ Modifiers</span><span class="val" id="mods">0</span></div>
+      <div class="line total-line"><span class="label">Total</span><span class="val" id="total">0</span></div>
+      <div class="line"><span class="label">Difficulty</span><span class="val" id="dl">0</span></div>
+      <div class="line outcome-line"><span class="outcome" id="outcome">…</span></div>
+    </section>
+
+    <footer class="actions">
+      <button id="reroll" class="btn" disabled>Roll again</button>
+    </footer>
+  </main>
+
+  <script type="module" src="/src/wrm-dice-app.ts"></script>
+</body>
+</html>

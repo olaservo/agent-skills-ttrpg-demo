@@ -1,5 +1,5 @@
 {
-  "name": "fallout-helper-mcp",
+  "name": "ttrpg-helper-mcp",
   "version": "0.1.0",
   "type": "module",
   "description": "MCP App server for Fallout TTRPG: animated 2d20 dice roller and character sheet UI resources.",
@@ -9,23 +9,25 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc --noEmit && cross-env INPUT=dice-roll.html vite build && cross-env INPUT=character-sheet.html vite build && tsc -p tsconfig.server.json && bun build server.ts --outdir dist --target node && bun build main.ts --outfile dist/index.js --target node --external \"./server.js\" --banner \"#!/usr/bin/env node\"",
+    "build": "tsc --noEmit && cross-env INPUT=dice-roll.html vite build && cross-env INPUT=character-sheet.html vite build && cross-env INPUT=wrm-dice.html vite build && cross-env INPUT=wrm-sheet.html vite build && tsc -p tsconfig.server.json && bun build server.ts --outdir dist --target node && bun build main.ts --outfile dist/index.js --target node --external \"./server.js\" --banner \"#!/usr/bin/env node\"",
     "watch:dice": "cross-env INPUT=dice-roll.html vite build --watch",
     "watch:sheet": "cross-env INPUT=character-sheet.html vite build --watch",
+    "watch:wrm-dice": "cross-env INPUT=wrm-dice.html vite build --watch",
+    "watch:wrm-sheet": "cross-env INPUT=wrm-sheet.html vite build --watch",
     "serve": "bun --watch main.ts",
     "serve:stdio": "bun main.ts --stdio",
     "start": "cross-env NODE_ENV=development npm run build && npm run serve",
     "start:stdio": "cross-env NODE_ENV=development npm run build 1>&2 && npm run serve:stdio",
-    "dev": "cross-env NODE_ENV=development concurrently \"npm run watch:dice\" \"npm run watch:sheet\" \"npm run serve\"",
+    "dev": "cross-env NODE_ENV=development concurrently \"npm run watch:dice\" \"npm run watch:sheet\" \"npm run watch:wrm-dice\" \"npm run watch:wrm-sheet\" \"npm run serve\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "prepublishOnly": "npm run build",
-    "pack": "npm run build && rm -rf node_modules && npm install --omit=dev --omit=optional && npx --yes @anthropic-ai/mcpb pack . fallout-helper-mcp.mcpb; npm install"
+    "pack": "npm run build && rm -rf node_modules && npm install --omit=dev --omit=optional && npx --yes @anthropic-ai/mcpb pack . ttrpg-helper-mcp.mcpb; npm install"
   },
   "dependencies": {
     "@modelcontextprotocol/ext-apps": "^1.0.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@olaservo/ext-skills": "^0.9.0",
+    "@olaservo/ext-skills": "^0.11.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "marked": "^14.1.4",
@@ -50,6 +52,6 @@
     }
   },
   "bin": {
-    "fallout-helper-mcp": "dist/index.js"
+    "ttrpg-helper-mcp": "dist/index.js"
   }
 }

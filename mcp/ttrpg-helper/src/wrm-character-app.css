@@ -1,0 +1,231 @@
+/* ── HUD: name + race/concept + attributes + derived stats ───────────── */
+.hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 2px solid var(--wrm-rule);
+  border-radius: var(--wrm-radius);
+  padding: 0.6rem 0.85rem;
+  background: var(--wrm-bg-deep);
+}
+
+.hud-name {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.hud-title {
+  margin: 0;
+  font-size: 1.25em;
+  letter-spacing: 0.04em;
+  color: var(--wrm-accent);
+  font-variant: small-caps;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-sub {
+  margin: 0;
+  font-size: 0.85em;
+  color: var(--wrm-fg-dim);
+  font-variant: small-caps;
+  letter-spacing: 0.03em;
+}
+
+.hud-sub .sep {
+  margin: 0 0.4em;
+  opacity: 0.6;
+}
+
+.attrs,
+.derived {
+  list-style: none;
+  display: flex;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+}
+
+.attrs li,
+.derived li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.2em;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--wrm-rule);
+  border-radius: var(--wrm-radius);
+  line-height: 1.1;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.attrs b,
+.derived b {
+  color: var(--wrm-fg-dim);
+  font-weight: normal;
+  font-size: 0.7em;
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+}
+
+.attrs span,
+.derived span {
+  color: var(--wrm-fg);
+  font-size: 1.25em;
+  font-weight: bold;
+}
+
+/* Attributes get the gold treatment; derived stats stay ink. */
+.attrs li {
+  border-color: var(--wrm-accent);
+}
+
+.attrs span {
+  color: var(--wrm-accent);
+}
+
+/* ── Body: portrait + sheet markdown ─────────────────────────────────── */
+.body {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.portrait {
+  width: 120px;
+  height: 120px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  border: 2px solid var(--wrm-accent);
+  border-radius: var(--wrm-radius);
+  background: var(--wrm-bg);
+  display: block;
+}
+
+@media (max-width: 540px) {
+  .body {
+    grid-template-columns: 1fr;
+  }
+  .portrait {
+    width: 96px;
+    height: 96px;
+    margin: 0 auto;
+  }
+}
+
+/* ── Markdown body styling ───────────────────────────────────────────── */
+.sheet-md {
+  min-width: 0;
+}
+
+.sheet-md > *:first-child {
+  margin-top: 0;
+}
+
+.sheet-md h2 {
+  margin: 1.2em 0 0.4em;
+  padding-bottom: 0.25em;
+  border-bottom: 1px solid var(--wrm-rule);
+  font-size: 1em;
+  letter-spacing: 0.06em;
+  font-variant: small-caps;
+  color: var(--wrm-accent);
+}
+
+.sheet-md h3 {
+  margin: 0.9em 0 0.3em;
+  font-size: 0.9em;
+  letter-spacing: 0.04em;
+  font-variant: small-caps;
+  color: var(--wrm-fg-dim);
+}
+
+.sheet-md p,
+.sheet-md ul,
+.sheet-md ol {
+  margin: 0.4em 0;
+  line-height: 1.5;
+}
+
+.sheet-md ul,
+.sheet-md ol {
+  padding-left: 1.2em;
+}
+
+.sheet-md li {
+  margin: 0.15em 0;
+}
+
+.sheet-md strong {
+  color: var(--wrm-fg);
+  font-weight: bold;
+}
+
+.sheet-md hr {
+  display: none;
+}
+
+.sheet-md code {
+  font-family: inherit;
+  color: var(--wrm-magic);
+}
+
+/* Tables: skills, weapons, spells, inventory */
+.sheet-md table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5em 0 0.8em;
+  font-size: 0.85em;
+}
+
+.sheet-md thead th {
+  text-align: left;
+  padding: 0.3em 0.5em;
+  border-bottom: 1px solid var(--wrm-rule);
+  color: var(--wrm-fg-dim);
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+  font-weight: normal;
+}
+
+.sheet-md tbody td {
+  padding: 0.25em 0.5em;
+  border-bottom: 1px dotted var(--wrm-rule);
+  color: var(--wrm-fg);
+}
+
+.sheet-md tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.sheet-md tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Center-aligned cells come through as align="center" from GFM `:---:` syntax. */
+.sheet-md th[align="center"],
+.sheet-md td[align="center"] {
+  text-align: center;
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────── */
+.empty {
+  border: 1px dashed var(--wrm-rule);
+  border-radius: var(--wrm-radius);
+  padding: 1.5rem 1rem;
+  text-align: center;
+  color: var(--wrm-fg-dim);
+  font-size: 0.95em;
+}
+
+.empty code {
+  color: var(--wrm-magic);
+  font-family: inherit;
+}

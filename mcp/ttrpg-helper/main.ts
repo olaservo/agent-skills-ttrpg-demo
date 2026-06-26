@@ -1,6 +1,6 @@
 /**
  * Entry point for the Fallout TTRPG Helper MCP server.
- * Run with: npx fallout-helper-mcp [--stdio]
+ * Run with: npx ttrpg-helper-mcp [--stdio]
  *   or:     node dist/index.js [--stdio]
  */
 
@@ -22,7 +22,12 @@ const DIST_DIR = import.meta.filename.endsWith(".ts")
   : import.meta.dirname;
 
 // Widget HTML the companion UI fetches. Allow-list, not blanket static.
-const WIDGET_FILES = new Set(["dice-roll.html", "character-sheet.html"]);
+const WIDGET_FILES = new Set([
+  "dice-roll.html",
+  "character-sheet.html",
+  "wrm-dice.html",
+  "wrm-sheet.html",
+]);
 
 export async function startStreamableHTTPServer(
   factory: () => McpServer,
@@ -146,7 +151,7 @@ export async function startStreamableHTTPServer(
       console.error("Failed to start server:", err);
       process.exit(1);
     }
-    console.log(`fallout-helper-mcp listening on http://localhost:${port}/mcp`);
+    console.log(`ttrpg-helper-mcp listening on http://localhost:${port}/mcp`);
   });
 
   const shutdown = () => {
