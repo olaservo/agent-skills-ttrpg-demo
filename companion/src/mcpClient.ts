@@ -3,7 +3,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { ClientCapabilities } from "@modelcontextprotocol/sdk/types.js";
 import { UI_EXTENSION_CAPABILITIES } from "@mcp-ui/client";
-import { SERVER_BASE } from "./serverBase";
+import { COMPANION_KEY, SERVER_BASE } from "./serverBase";
 
 /**
  * Connect a browser MCP client to the server over StreamableHTTP. Passing this
@@ -30,7 +30,11 @@ export function useMcpClient(): Client | null {
         { name: "reachy-dm-phone", version: "0.1.0" },
         { capabilities },
       );
-      await c.connect(new StreamableHTTPClientTransport(new URL(`${SERVER_BASE}/mcp`)));
+      await c.connect(
+        new StreamableHTTPClientTransport(new URL(`${SERVER_BASE}/mcp`), {
+          requestInit: COMPANION_KEY ? { headers: { Authorization: `Bearer ${COMPANION_KEY}` } } : undefined,
+        }),
+      );
       connected = c;
       if (active) setClient(c);
       else await c.close();

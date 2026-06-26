@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { SERVER_BASE } from "./serverBase";
+import { SERVER_BASE, withKey } from "./serverBase";
 import type { ToolEvent } from "./types";
 
 /**
@@ -14,7 +14,7 @@ export function useToolEvents(onEvent: (evt: ToolEvent) => void): void {
   });
 
   useEffect(() => {
-    const es = new EventSource(`${SERVER_BASE}/events`);
+    const es = new EventSource(withKey(`${SERVER_BASE}/events`));
     es.onmessage = (e) => {
       try {
         cb.current(JSON.parse(e.data) as ToolEvent);

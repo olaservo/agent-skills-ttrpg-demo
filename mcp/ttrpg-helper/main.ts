@@ -11,7 +11,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import cors from "cors";
 import express from "express";
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { createServer } from "./server.js";
@@ -45,6 +45,26 @@ export async function startStreamableHTTPServer(
       allowedHeaders: ["*"],
     }),
   );
+
+  // ── Optional shared-secret gate ─────────────────────────────────────────
+  // When COMPANION_SECRET is set, require it on the live feed (/events, /transcript) and the
+  // tool endpoint (/mcp), so a public deployment is tied to one session. The key rides in
+  // `?key=` (EventSource can't set headers) or `Authorization: Bearer <secret>`. /widgets stays
+  // open (static UI shells, no game data). Unset ⇒ no gate (local dev / unguarded). NOTE: interim
+  // measure; the principled fix is a per-session room handle (MCP SEP-2567), tracked in the backlog.
+  const SECRET = process.env.COMPANION_SECRET?.trim();
+  const GATED = new Set(["/events", "/transcript", "/mcp"]);
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (!SECRET || !GATED.has(req.path)) return next();
+    const q = req.query.key;
+    const ok =
+      (typeof q === "string" && q === SECRET) || req.headers.authorization === `Bearer ${SECRET}`;
+    if (!ok) {
+      res.status(401).json({ error: "unauthorized: missing or invalid key" });
+      return;
+    }
+    next();
+  });
 
   // ── SSE: live tool-activity stream for companion screens ────────────────
   app.get("/events", (req: Request, res: Response) => {
