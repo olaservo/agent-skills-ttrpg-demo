@@ -114,7 +114,9 @@ export function createServer(): McpServer {
   );
 
   // SEP-2640 §Capability Declaration. Must run before server.connect().
-  declareSkillsExtension(server.server);
+  // directoryRead: we implement resources/directory/read so skill references +
+  // voices.json travel on install (not just SKILL.md). Requires ext-skills >= 0.11.0.
+  declareSkillsExtension(server.server, { directoryRead: true });
 
   // Names of every tool we register, so we can validate each skill's
   // `metadata.tools` declaration against what the server actually provides.
@@ -637,7 +639,7 @@ export function createServer(): McpServer {
   // from ./skills/ as skill:// resources. Also registers skill://index.json
   // and per-skill resource templates for supporting files.
   const skillMap = discoverSkills(SKILLS_DIR);
-  registerSkillResources(server, skillMap, SKILLS_DIR);
+  registerSkillResources(server, skillMap, SKILLS_DIR, { directoryRead: true });
 
   // ── Validate skill tool declarations ───────────────────────────────────
   // Each SKILL.md may declare the MCP tools it needs in `metadata.tools` (a
