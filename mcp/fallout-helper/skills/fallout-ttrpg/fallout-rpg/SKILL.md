@@ -9,6 +9,13 @@ metadata:
     name: Ola Hungerford
     url: https://github.com/olaservo
 
+  tools:
+    - name: roll_dice
+      purpose: Roll a Fallout 2d20 skill test (target = attribute + skill, difficulty = successes needed); drives the Pip-Boy dice UI and reports successes, complications, and AP.
+      ui_resource: ui://fallout-helper/dice-roll.html
+    - name: present_player_choice
+      purpose: Pause at a meaningful narrative branch and let the player choose (system-agnostic).
+
   sources:
     - title: 2d20 System Reference Document
       publisher: Modiphius Entertainment

@@ -10,17 +10,23 @@ description: |
   spellcasting, spell enhancement), Fate points, equipment, non-human races, and bestiary stat
   blocks. WR&M has no classes - the three attributes ARE the archetype.
 compatibility: |
-  WR&M's dice system is 1d6 + attribute vs a target number, with 6s exploding. The
-  `fallout-helper` MCP server's `roll_dice` tool is hardcoded to the Fallout 2d20 system
-  (roll-under, success-counting) and does NOT apply here - do not use it for WR&M tests. WR&M
-  tests use a physical d6 or an agent-rolled d6 in text mode. The host-agnostic
-  `present_player_choice` tool may still be used for narrative branch points.
+  WR&M's dice system is 1d6 + attribute vs a target number, with 6s exploding. Use the
+  `fallout-helper` MCP server's `roll_wrm` tool for WR&M checks - NOT `roll_dice`, which is
+  hardcoded to the Fallout 2d20 system (roll-under, success-counting) and does not apply here.
+  The host-agnostic `present_player_choice` tool may be used for narrative branch points. The
+  tools this skill needs are declared in `metadata.tools` below.
 license: CC-BY-4.0
 metadata:
-  version: 0.1.0
+  version: 0.2.0
   skill_author:
     name: Ola Hungerford
     url: https://github.com/olaservo
+
+  tools:
+    - name: roll_wrm
+      purpose: Roll a WR&M check - 1d6 + attribute (+2 if a relevant skill applies) vs a Difficulty Level, meet or beat, with exploding 6s. Supports advantage/disadvantage for the Exceptional Attribute / No Talent for Magic racial talents.
+    - name: present_player_choice
+      purpose: Pause the game at a meaningful narrative branch and let the player choose (system-agnostic).
 
   scope: "Complete WR&M game system encoded from the CC-BY 3.0 System Reference Document: core mechanics, character creation, skills, talents, combat, magic, equipment, magic items, races, GM guidance, and bestiary."
 
@@ -173,12 +179,28 @@ and achieving character goals; players should spend it sparingly.
 
 ## Bundled MCP tools
 
-This skill is served by the `fallout-helper` MCP server (source at `mcp/fallout-helper/`), but
-that server's `roll_dice` tool implements the **Fallout 2d20** system and is **not compatible**
-with WR&M's 1d6+attribute resolution. For WR&M, resolve checks with a physical d6 or an
-agent-rolled d6 in text mode, applying the loop above. (A WR&M-native d6 roller is a possible
-future addition to the server.)
+This skill is served by the `fallout-helper` MCP server (source at `mcp/fallout-helper/`). The
+tools it needs are declared in this file's `metadata.tools` and provided by that server:
 
-The `present_player_choice` tool is system-agnostic and may be used for meaningful narrative
-branch points - it renders a structured picker and blocks until the player chooses. Use it for
-story forks (parley vs. sneak vs. fight), not for mechanical rolls or pure flavor.
+- **`roll_wrm`** — the WR&M d6 roller. Rolls `1d6 + attribute (+2 if a skill applies)` vs a
+  Difficulty Level, meet or beat, with exploding 6s. Returns the kept die, any explosions, the
+  total, pass/fail, and the margin. Do **not** use `roll_dice` for WR&M — that tool is the
+  Fallout 2d20 system.
+  - `attribute` (0-12) and `difficulty` (the DL, or a target's Defense for an attack) are required.
+  - `skill: true` when a relevant skill applies — adds +2 **and** enables exploding 6s.
+  - `rollMode: "advantage"` for the **Exceptional Attribute** racial talent (2d6 keep highest);
+    `"disadvantage"` for **No Talent for Magic** (2d6 keep lowest).
+  - `bonus` for other modifiers (a second applicable skill, Champion, a charge); `explode: true`
+    to force exploding on a single-die damage roll; `seed` for reproducible rolls.
+- **`present_player_choice`** — system-agnostic. Use it for meaningful story forks (parley vs.
+  sneak vs. fight); it renders a picker and blocks until the player chooses. Not for mechanical
+  rolls or pure flavor.
+
+Example `roll_wrm` calls (issued via the tool, not as shell commands):
+
+- Sword attack, Warrior 6 + Swords, vs the target's Defense 12: `roll_wrm({ attribute: 6, skill: true, difficulty: 12 })`
+- Plain Mage check, no skill, Routine DL 7 (no exploding): `roll_wrm({ attribute: 4, difficulty: 7 })`
+- Dwarf Athletics with Exceptional Attribute, Challenging DL 9: `roll_wrm({ attribute: 6, skill: true, difficulty: 9, rollMode: "advantage" })`
+
+(Weapon **damage** rolls of more than one die, e.g. a two-handed weapon's 2d6, are rolled
+directly — exploding on each 6; `roll_wrm` with `explode: true` covers single-die exploding rolls.)

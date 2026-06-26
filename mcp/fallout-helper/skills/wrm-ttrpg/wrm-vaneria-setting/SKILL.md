@@ -10,10 +10,14 @@ description: >-
   skill for the rules. The setting is a deliberately sparse "sandbox seed" the GM fills in.
 license: CC-BY-NC-SA-4.0
 metadata:
-  version: 0.1.0
+  version: 0.2.0
   skill_author:
     name: Ola Hungerford
     url: https://github.com/olaservo
+
+  tools:
+    - name: present_player_choice
+      purpose: Surface a meaningful in-world decision (which city-state to back, parley vs. fight a warlord's troops) as a structured player choice. System-agnostic.
 
   depends_on:
     - warrior-rogue-mage

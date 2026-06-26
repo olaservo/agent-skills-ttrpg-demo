@@ -10,6 +10,14 @@ metadata:
     name: Ola Hungerford
     url: https://github.com/olaservo
 
+  tools:
+    - name: show_character_sheet
+      purpose: Render one of the six Fallout pregens (augusta-byron, tommy-doyle, bailey-bigsmile, old-tallman, hazel-johnson, marvin) in the Pip-Boy character-sheet UI.
+      ui_resource: ui://fallout-helper/character-sheet.html
+    - name: roll_dice
+      purpose: Resolve the 2d20 skill tests these sheets imply; drives the Pip-Boy dice UI.
+      ui_resource: ui://fallout-helper/dice-roll.html
+
   depends_on:
     - fallout-rpg
 

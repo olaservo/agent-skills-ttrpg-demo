@@ -13,10 +13,16 @@ description: >-
   skill for the rules; the party also fits a Fallen Imperium of Vaneria campaign (wrm-vaneria-setting).
 license: CC-BY-4.0
 metadata:
-  version: 0.1.0
+  version: 0.2.0
   skill_author:
     name: Ola Hungerford
     url: https://github.com/olaservo
+
+  tools:
+    - name: show_wrm_character_sheet
+      purpose: Load one of the six pregens by slug (brannic-caldermoor, pip-underbough, lyrandel-mistweaver, durga-ironhand, vashk-bloodmane, aurelia-vane) - returns attributes, derived stats, skills, talents, spells, and biography.
+    - name: roll_wrm
+      purpose: Resolve any check, attack, or save these sheets imply (1d6 + attribute vs DL, exploding 6s). Provided via the warrior-rogue-mage skill.
 
   depends_on:
     - warrior-rogue-mage

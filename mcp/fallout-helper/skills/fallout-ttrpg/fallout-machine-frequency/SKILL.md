@@ -9,6 +9,16 @@ metadata:
     name: Ola Hungerford
     url: https://github.com/olaservo
 
+  tools:
+    - name: roll_dice
+      purpose: Resolve 2d20 skill tests and combat in the adventure's encounters; drives the Pip-Boy dice UI.
+      ui_resource: ui://fallout-helper/dice-roll.html
+    - name: present_player_choice
+      purpose: Surface the module's branch points (how to approach Bleakford, whether to interrupt Trestridge's transfer) as a structured player choice.
+    - name: show_character_sheet
+      purpose: Display a pregen sheet when the party uses the fallout-character-sheets roster with this module.
+      ui_resource: ui://fallout-helper/character-sheet.html
+
   depends_on:
     - fallout-rpg
 
