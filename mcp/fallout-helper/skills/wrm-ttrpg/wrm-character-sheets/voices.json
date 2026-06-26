@@ -1,0 +1,34 @@
+{
+  "characters": [
+    {
+      "names": ["Sir Brannic Caldermoor", "Brannic Caldermoor", "Brannic", "Sir Brannic"],
+      "voice_id": "wrm_brannic",
+      "design_prompt": "A steady, plain-spoken human knight in his thirties: warm baritone, unhurried and reassuring, the voice of someone used to being the calm wall others stand behind. Dependable, a little weary, never boastful."
+    },
+    {
+      "names": ["Pip Underbough", "Pip"],
+      "voice_id": "wrm_pip",
+      "design_prompt": "A bright, quick halfling burglar: light, cheerful, fast-talking with a mischievous lilt and a grin you can hear. Allergic to fair fights and delighted by her own cleverness."
+    },
+    {
+      "names": ["Lyrandel Mistweaver", "Lyrandel"],
+      "voice_id": "wrm_lyrandel",
+      "design_prompt": "A cool, precise elf mage: clear, slightly aloof alto with crisp diction and an undercurrent of impatience, as if explaining the obvious to slower minds. Elegant, brilliant, faintly arrogant."
+    },
+    {
+      "names": ["Durga Ironhand", "Durga"],
+      "voice_id": "wrm_durga",
+      "design_prompt": "A gruff dwarf smith and defender: low, gravelly, blunt contralto with a rolling burr. Dry humor, zero patience for nonsense, and a habit of grumbling about the quality of human steel."
+    },
+    {
+      "names": ["Vashk Bloodmane", "Vashk"],
+      "voice_id": "wrm_vashk",
+      "design_prompt": "A deep, rough orc warrior: powerful bass with a controlled rumble that turns to a feral roar in the berserk rage. Quiet and scrupulously fair when calm, terrifying when not - a gentle giant tired of being feared."
+    },
+    {
+      "names": ["Sister Aurelia Vane", "Aurelia Vane", "Aurelia", "Sister Aurelia"],
+      "voice_id": "wrm_aurelia",
+      "design_prompt": "A warm, composed human cleric: gentle, steady mezzo with a note of quiet conviction. Kind but not naive, carrying the measured calm of someone who heals on the front line and is starting to doubt her superiors."
+    }
+  ]
+}

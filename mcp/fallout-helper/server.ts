@@ -14,7 +14,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { parseCharacterSheet } from "./character-parser.js";
+import { parseWrmCharacterSheet } from "./wrm-character-parser.js";
 import { formatHuman, rollTest } from "./dice/roll.js";
+import { formatHumanWrm, rollWrm } from "./dice/wrm-roll.js";
 import { publishToolEvent } from "./events.js";
 
 // Works both from source (server.ts) and compiled (dist/server.js).
@@ -45,6 +47,59 @@ type CharacterId = keyof typeof CHARACTERS;
 const CHARACTER_IDS = Object.keys(CHARACTERS) as [CharacterId, ...CharacterId[]];
 const CHARACTER_SHEETS_DIR = "fallout-ttrpg/fallout-character-sheets/references";
 
+// Warrior, Rogue & Mage pregens — slug -> reference filename. Distinct roster
+// from the Fallout one; the numeric prefix on disk orders the party.
+const WRM_CHARACTERS = {
+  "brannic-caldermoor": "01-brannic-caldermoor.md",
+  "pip-underbough": "02-pip-underbough.md",
+  "lyrandel-mistweaver": "03-lyrandel-mistweaver.md",
+  "durga-ironhand": "04-durga-ironhand.md",
+  "vashk-bloodmane": "05-vashk-bloodmane.md",
+  "aurelia-vane": "06-aurelia-vane.md",
+} as const;
+type WrmCharacterId = keyof typeof WRM_CHARACTERS;
+const WRM_CHARACTER_IDS = Object.keys(WRM_CHARACTERS) as [WrmCharacterId, ...WrmCharacterId[]];
+const WRM_CHARACTER_SHEETS_DIR = "wrm-ttrpg/wrm-character-sheets/references";
+
+/** A tool a skill declares it needs, under `metadata.tools` in its SKILL.md. */
+interface SkillToolDeclaration {
+  name: string;
+  purpose?: string;
+  ui_resource?: string;
+}
+
+/**
+ * Cross-check every skill's `metadata.tools` declaration against the set of
+ * tools the server actually registers, logging a warning for any declared tool
+ * the server does not provide (typo, renamed/removed tool, wrong server). The
+ * declaration itself flows to hosts via `skill://index.json`; this guards drift
+ * between what a skillbook asks to load and what this server can supply.
+ * Returns the list of problem messages (also used in tests).
+ */
+export function validateSkillToolDeclarations(
+  skillMap: ReturnType<typeof discoverSkills>,
+  registeredToolNames: ReadonlySet<string>,
+): string[] {
+  const problems: string[] = [];
+  for (const skill of skillMap.values()) {
+    const metadata = skill.frontmatter.metadata as { tools?: unknown } | undefined;
+    const tools = metadata?.tools;
+    if (!Array.isArray(tools)) continue;
+    for (const entry of tools as Array<string | SkillToolDeclaration>) {
+      const name = typeof entry === "string" ? entry : entry?.name;
+      if (typeof name !== "string" || !name) continue;
+      if (!registeredToolNames.has(name)) {
+        const msg =
+          `[skills] Skill "${skill.name}" declares tool "${name}" in metadata.tools, but this ` +
+          `server registers no such tool. Registered: ${[...registeredToolNames].sort().join(", ")}`;
+        console.error(msg);
+        problems.push(msg);
+      }
+    }
+  }
+  return problems;
+}
+
 export function createServer(): McpServer {
   const server = new McpServer(
     {
@@ -60,6 +115,10 @@ export function createServer(): McpServer {
 
   // SEP-2640 §Capability Declaration. Must run before server.connect().
   declareSkillsExtension(server.server);
+
+  // Names of every tool we register, so we can validate each skill's
+  // `metadata.tools` declaration against what the server actually provides.
+  const registeredToolNames = new Set<string>();
 
   // ── Tool: roll_dice ────────────────────────────────────────────────────
   registerAppTool(
@@ -144,6 +203,7 @@ export function createServer(): McpServer {
       };
     },
   );
+  registeredToolNames.add("roll_dice");
 
   // ── Tool: present_player_choice ────────────────────────────────────────
   // No UI iframe: elicitation forms are rendered by the *client*. So we
@@ -305,6 +365,7 @@ export function createServer(): McpServer {
       }
     },
   );
+  registeredToolNames.add("present_player_choice");
 
   // ── Tool: show_character_sheet ─────────────────────────────────────────
   registerAppTool(
@@ -374,6 +435,159 @@ export function createServer(): McpServer {
       };
     },
   );
+  registeredToolNames.add("show_character_sheet");
+
+  // ── Tool: roll_wrm ─────────────────────────────────────────────────────
+  // Warrior, Rogue & Mage d6 system: 1d6 + attribute (+2 skill) vs a Difficulty
+  // Level, with exploding 6s. A different system from roll_dice (Fallout 2d20),
+  // so it is its own tool. No UI iframe yet — registered with the plain API.
+  server.registerTool(
+    "roll_wrm",
+    {
+      title: "Roll Warrior, Rogue & Mage Dice",
+      description:
+        "Roll a Warrior, Rogue & Mage check: 1d6 + attribute (+2 if a relevant skill applies) " +
+        "vs a Difficulty Level, meet or beat. A 6 explodes (add 6 and roll again) when a skill " +
+        "applies or when `explode` is set (e.g. damage rolls). Use rollMode 'advantage' for the " +
+        "Exceptional Attribute racial talent (2d6 keep highest) and 'disadvantage' for No Talent " +
+        "for Magic (2d6 keep lowest). This is NOT the Fallout 2d20 system — use roll_dice for that.",
+      inputSchema: {
+        attribute: z
+          .number()
+          .int()
+          .min(0)
+          .max(20)
+          .describe("Attribute level (Warrior / Rogue / Mage). 0-6 for PCs; up to 20 for monsters/veterans."),
+        difficulty: z
+          .number()
+          .int()
+          .describe(
+            "Difficulty Level to meet or beat (Easy 5, Routine 7, Challenging 9, Hard 11, Extreme 13), or a target's Defense for an attack.",
+          ),
+        skill: z
+          .boolean()
+          .default(false)
+          .describe("A relevant skill is known: adds +2 and enables exploding 6s."),
+        bonus: z
+          .number()
+          .int()
+          .default(0)
+          .describe("Extra circumstantial modifier (second skill, Champion, charge, racial, etc.)."),
+        rollMode: z
+          .enum(["normal", "advantage", "disadvantage"])
+          .default("normal")
+          .describe(
+            "advantage = Exceptional Attribute racial (2d6 keep highest); disadvantage = No Talent for Magic (2d6 keep lowest).",
+          ),
+        explode: z
+          .boolean()
+          .optional()
+          .describe("Override exploding (e.g. force on for a damage roll). Default: explodes iff `skill`."),
+        seed: z.number().int().optional().describe("Optional RNG seed for reproducible rolls."),
+      },
+      outputSchema: {
+        attribute: z.number(),
+        skillBonus: z.number(),
+        bonus: z.number(),
+        difficulty: z.number(),
+        rollMode: z.string(),
+        explodeEnabled: z.boolean(),
+        initialDice: z.array(z.number()),
+        keptInitial: z.number(),
+        explosions: z.array(z.number()),
+        dieTotal: z.number(),
+        exploded: z.boolean(),
+        total: z.number(),
+        passed: z.boolean(),
+        margin: z.number(),
+      },
+    },
+    async (args): Promise<CallToolResult> => {
+      const result = rollWrm(args);
+      const content = [{ type: "text" as const, text: formatHumanWrm(result) }];
+      publishToolEvent({
+        type: "tool_result",
+        toolName: "roll_wrm",
+        arguments: args,
+        structuredContent: result,
+        content,
+      });
+      return {
+        content,
+        structuredContent: result as unknown as { [key: string]: unknown },
+      };
+    },
+  );
+  registeredToolNames.add("roll_wrm");
+
+  // ── Tool: show_wrm_character_sheet ─────────────────────────────────────
+  // Loads a WR&M pregen sheet via its own parser (three attributes, formula
+  // derived stats, no levels) — distinct from the Fallout S.P.E.C.I.A.L. sheet.
+  server.registerTool(
+    "show_wrm_character_sheet",
+    {
+      title: "Show Warrior, Rogue & Mage Character Sheet",
+      description:
+        "Load a Warrior, Rogue & Mage pregen sheet (attributes, derived stats, skills, talents, " +
+        "weapons, spells, inventory, biography). Available: brannic-caldermoor (human knight), " +
+        "pip-underbough (halfling burglar), lyrandel-mistweaver (elf mage), durga-ironhand " +
+        "(dwarf defender), vashk-bloodmane (orc berserker), aurelia-vane (human cleric/spellblade).",
+      inputSchema: {
+        characterId: z
+          .enum(WRM_CHARACTER_IDS)
+          .describe("Slug of the pregen to load (one of the six available IDs)."),
+      },
+      outputSchema: {
+        characterId: z.string(),
+        name: z.string(),
+        race: z.string(),
+        concept: z.string(),
+        attributes: z.object({
+          warrior: z.number().int(),
+          rogue: z.number().int(),
+          mage: z.number().int(),
+        }),
+        hp: z.number().int(),
+        mana: z.number().int(),
+        fate: z.number().int(),
+        defenseBase: z.number().int(),
+        defense: z.number().int(),
+        armorPenalty: z.number().int(),
+        skills: z.array(z.string()),
+        talents: z.array(z.string()),
+        spells: z.array(z.string()),
+        markdown: z.string(),
+      },
+    },
+    async (args): Promise<CallToolResult> => {
+      const characterId = args.characterId as WrmCharacterId;
+      const filename = WRM_CHARACTERS[characterId];
+      const filePath = path.join(SKILLS_DIR, WRM_CHARACTER_SHEETS_DIR, filename);
+      const raw = await fs.readFile(filePath, "utf-8");
+      const parsed = parseWrmCharacterSheet(raw);
+      const structuredContent = { characterId, ...parsed };
+      const a = parsed.attributes;
+      const content = [
+        {
+          type: "text" as const,
+          text:
+            `Loaded ${parsed.name} (${parsed.race}, ${parsed.concept}). ` +
+            `Warrior ${a.warrior} / Rogue ${a.rogue} / Mage ${a.mage}; ` +
+            `HP ${parsed.hp}, Mana ${parsed.mana}, Fate ${parsed.fate}, Defense ${parsed.defense}` +
+            `${parsed.spells.length ? `; spells: ${parsed.spells.join(", ")}` : ""}.`,
+        },
+      ];
+      publishToolEvent({
+        type: "tool_result",
+        toolName: "show_wrm_character_sheet",
+        arguments: args,
+        structuredContent,
+        content,
+      });
+      return { content, structuredContent };
+    },
+  );
+  registeredToolNames.add("show_wrm_character_sheet");
 
   // ── Resource: dice-roll UI ─────────────────────────────────────────────
   registerAppResource(
@@ -424,6 +638,14 @@ export function createServer(): McpServer {
   // and per-skill resource templates for supporting files.
   const skillMap = discoverSkills(SKILLS_DIR);
   registerSkillResources(server, skillMap, SKILLS_DIR);
+
+  // ── Validate skill tool declarations ───────────────────────────────────
+  // Each SKILL.md may declare the MCP tools it needs in `metadata.tools` (a
+  // list of { name, purpose, ui_resource? }). The full frontmatter is surfaced
+  // to hosts via skill://index.json, so a host loading a skillbook knows which
+  // tools to expect. Here we cross-check that every declared tool is actually
+  // provided by this server and warn on drift (typos, renamed/removed tools).
+  validateSkillToolDeclarations(skillMap, registeredToolNames);
 
   return server;
 }
