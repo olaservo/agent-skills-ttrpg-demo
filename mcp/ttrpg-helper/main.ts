@@ -1,6 +1,6 @@
 /**
  * Entry point for the Fallout TTRPG Helper MCP server.
- * Run with: npx fallout-helper-mcp [--stdio]
+ * Run with: npx ttrpg-helper-mcp [--stdio]
  *   or:     node dist/index.js [--stdio]
  */
 
@@ -146,7 +146,7 @@ export async function startStreamableHTTPServer(
       console.error("Failed to start server:", err);
       process.exit(1);
     }
-    console.log(`fallout-helper-mcp listening on http://localhost:${port}/mcp`);
+    console.log(`ttrpg-helper-mcp listening on http://localhost:${port}/mcp`);
   });
 
   const shutdown = () => {

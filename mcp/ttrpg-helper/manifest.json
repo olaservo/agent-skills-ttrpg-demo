@@ -1,6 +1,6 @@
 {
   "manifest_version": "0.3",
-  "name": "fallout-helper-mcp",
+  "name": "ttrpg-helper-mcp",
   "display_name": "Fallout TTRPG Helper",
   "version": "0.1.0",
   "description": "MCP App server for Fallout: The Roleplaying Game (Modiphius 2d20). Server-side dice resolver with a Pip-Boy-themed animated UI, plus a character-sheet UI resource. Not affiliated with or endorsed by Bethesda or Modiphius.",

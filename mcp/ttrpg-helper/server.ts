@@ -24,14 +24,14 @@ const DIST_DIR = import.meta.filename.endsWith(".ts")
   ? path.join(import.meta.dirname, "dist")
   : import.meta.dirname;
 
-// Skills live at mcp/fallout-helper/skills/. In dev (server.ts) that's a
+// Skills live at mcp/ttrpg-helper/skills/. In dev (server.ts) that's a
 // sibling of this file; in prod (dist/server.js) it's one level up.
 const SKILLS_DIR = import.meta.filename.endsWith(".ts")
   ? path.join(import.meta.dirname, "skills")
   : path.join(import.meta.dirname, "..", "skills");
 
-const DICE_UI_URI = "ui://fallout-helper/dice-roll.html";
-const SHEET_UI_URI = "ui://fallout-helper/character-sheet.html";
+const DICE_UI_URI = "ui://ttrpg-helper/dice-roll.html";
+const SHEET_UI_URI = "ui://ttrpg-helper/character-sheet.html";
 
 // Slug -> reference filename. Slugs are stable IDs the agent passes to
 // `show_character_sheet`; the numeric prefix on disk just orders the roster.

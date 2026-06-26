@@ -1,5 +1,5 @@
 {
-  "name": "fallout-helper-mcp",
+  "name": "ttrpg-helper-mcp",
   "version": "0.1.0",
   "type": "module",
   "description": "MCP App server for Fallout TTRPG: animated 2d20 dice roller and character sheet UI resources.",
@@ -20,7 +20,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "prepublishOnly": "npm run build",
-    "pack": "npm run build && rm -rf node_modules && npm install --omit=dev --omit=optional && npx --yes @anthropic-ai/mcpb pack . fallout-helper-mcp.mcpb; npm install"
+    "pack": "npm run build && rm -rf node_modules && npm install --omit=dev --omit=optional && npx --yes @anthropic-ai/mcpb pack . ttrpg-helper-mcp.mcpb; npm install"
   },
   "dependencies": {
     "@modelcontextprotocol/ext-apps": "^1.0.0",
@@ -50,6 +50,6 @@
     }
   },
   "bin": {
-    "fallout-helper-mcp": "dist/index.js"
+    "ttrpg-helper-mcp": "dist/index.js"
   }
 }
