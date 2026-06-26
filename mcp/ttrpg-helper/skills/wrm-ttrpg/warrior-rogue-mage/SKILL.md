@@ -11,7 +11,7 @@ description: |
   blocks. WR&M has no classes - the three attributes ARE the archetype.
 compatibility: |
   WR&M's dice system is 1d6 + attribute vs a target number, with 6s exploding. Use the
-  `fallout-helper` MCP server's `roll_wrm` tool for WR&M checks - NOT `roll_dice`, which is
+  `ttrpg-helper` MCP server's `roll_wrm` tool for WR&M checks - NOT `roll_dice`, which is
   hardcoded to the Fallout 2d20 system (roll-under, success-counting) and does not apply here.
   The host-agnostic `present_player_choice` tool may be used for narrative branch points. The
   tools this skill needs are declared in `metadata.tools` below.
@@ -179,7 +179,7 @@ and achieving character goals; players should spend it sparingly.
 
 ## Bundled MCP tools
 
-This skill is served by the `fallout-helper` MCP server (source at `mcp/fallout-helper/`). The
+This skill is served by the `ttrpg-helper` MCP server (source at `mcp/ttrpg-helper/`). The
 tools it needs are declared in this file's `metadata.tools` and provided by that server:
 
 - **`roll_wrm`** — the WR&M d6 roller. Rolls `1d6 + attribute (+2 if a skill applies)` vs a

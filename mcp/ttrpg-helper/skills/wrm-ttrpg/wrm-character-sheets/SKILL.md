@@ -32,7 +32,7 @@ metadata:
   sources:
     - title: warrior-rogue-mage (sibling skill)
       publisher: Ola Hungerford
-      url: https://github.com/olaservo/agent-skills-ttrpg-demo/tree/main/mcp/fallout-helper/skills/wrm-ttrpg/warrior-rogue-mage
+      url: https://github.com/olaservo/agent-skills-ttrpg-demo/tree/main/mcp/ttrpg-helper/skills/wrm-ttrpg/warrior-rogue-mage
       relationship: system_encoding
       rights_basis: license_grant
       license: CC-BY-4.0

@@ -33,11 +33,10 @@ describe("validateSkillToolDeclarations", () => {
   });
 
   it("ignores skills with no metadata.tools declaration", () => {
-    // fallout-uncredited-encounters has minimal frontmatter and declares no tools.
-    const skillMap = discoverSkills(SKILLS_DIR);
-    const uncredited = [...skillMap.values()].find((s) => s.name === "fallout-uncredited-encounters");
-    expect(uncredited).toBeTruthy();
-    const single = new Map([["x", uncredited!]]);
+    // A skill with minimal frontmatter (no metadata.tools) yields no problems.
+    type SkillVal = ReturnType<typeof discoverSkills> extends Map<unknown, infer V> ? V : never;
+    const noTools = { name: "no-tools-fixture", frontmatter: {} } as unknown as SkillVal;
+    const single = new Map([["x", noTools]]);
     expect(validateSkillToolDeclarations(single, REGISTERED)).toEqual([]);
   });
 });

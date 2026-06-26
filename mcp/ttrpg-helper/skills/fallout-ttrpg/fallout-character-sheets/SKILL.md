@@ -1,7 +1,7 @@
 ---
 name: fallout-character-sheets
 description: >-
-  Pre-generated player characters for Fallout - The Roleplaying Game (Modiphius 2d20). Use this skill when the user asks to pick a pregen, hand out characters, look up a PC's S.P.E.C.I.A.L., skills, perks, weapons, HP, inventory, or biography, or needs a ready-made party for a one-shot or convention game. The roster has six balanced PCs spanning Levels 1-3: Augusta Byron (Vault Dweller scientist), "Happy" Tommy Doyle (Survivor gambler), Bailey Bigsmile (Ghoul wanderer), Old Tallman (Super Mutant philosopher), Hazel Johnson (Brotherhood Field Scribe), and Marvin (Mister Handy robot). Activates when the user mentions any of these character names, "pregens", "pre-generated characters", "character sheets", "the party", "who can I play", or asks for any of these PCs' tag skills, traits, gear, or background. Pair with the fallout-rpg skill for the underlying 2d20 mechanics; the party also fits the fallout-machine-frequency adventure module well.
+  Pre-generated player characters for Fallout - The Roleplaying Game (Modiphius 2d20). Use this skill when the user asks to pick a pregen, hand out characters, look up a PC's S.P.E.C.I.A.L., skills, perks, weapons, HP, inventory, or biography, or needs a ready-made party for a one-shot or convention game. The roster has six balanced PCs spanning Levels 1-3: Augusta Byron (Vault Dweller scientist), "Happy" Tommy Doyle (Survivor gambler), Bailey Bigsmile (Ghoul wanderer), Old Tallman (Super Mutant philosopher), Hazel Johnson (Brotherhood Field Scribe), and Marvin (Mister Handy robot). Activates when the user mentions any of these character names, "pregens", "pre-generated characters", "character sheets", "the party", "who can I play", or asks for any of these PCs' tag skills, traits, gear, or background. Pair with the fallout-rpg skill for the underlying 2d20 mechanics.
 
 license: CC-BY-4.0
 metadata:
@@ -13,10 +13,10 @@ metadata:
   tools:
     - name: show_character_sheet
       purpose: Render one of the six Fallout pregens (augusta-byron, tommy-doyle, bailey-bigsmile, old-tallman, hazel-johnson, marvin) in the Pip-Boy character-sheet UI.
-      ui_resource: ui://fallout-helper/character-sheet.html
+      ui_resource: ui://ttrpg-helper/character-sheet.html
     - name: roll_dice
       purpose: Resolve the 2d20 skill tests these sheets imply; drives the Pip-Boy dice UI.
-      ui_resource: ui://fallout-helper/dice-roll.html
+      ui_resource: ui://ttrpg-helper/dice-roll.html
 
   depends_on:
     - fallout-rpg
@@ -26,7 +26,7 @@ metadata:
   sources:
     - title: fallout-rpg (sibling skill)
       publisher: Ola Hungerford
-      url: https://github.com/olaservo/agent-skills-ttrpg-demo/tree/main/mcp/fallout-helper/skills/fallout-ttrpg/fallout-rpg
+      url: https://github.com/olaservo/agent-skills-ttrpg-demo/tree/main/mcp/ttrpg-helper/skills/fallout-ttrpg/fallout-rpg
       relationship: system_encoding
       rights_basis: license_grant
       covers: 2d20 mechanics (S.P.E.C.I.A.L., skills, perks, AP, Luck, combat resolution) referenced by every sheet
@@ -45,7 +45,6 @@ metadata:
   own_contributions:
     - Six original pre-generated player characters with full sheets, biographies, and inventories
     - Picker logic for matching players to characters by play style
-    - Composition guidance for pairing the party with the fallout-machine-frequency adventure
 
   attribution: |
     Six pre-generated player characters by Ola Hungerford, licensed CC-BY-4.0.
@@ -112,13 +111,6 @@ Hand a sheet to a player without explaining these and you will be answering rule
 ## How this skill composes
 
 - **With `fallout-rpg` (required for play).** Every roll these sheets imply - skill tests, AP spends, Luck options, combat resolution, hit-location targeting, healing - is governed by `fallout-rpg`. When a sheet lists "Small Guns TN 7", the *resolution* is `fallout-rpg`'s 2d20 loop. Always load `fallout-rpg` alongside this skill once play actually starts.
-- **With `fallout-machine-frequency` (recommended fit).** This party slots into Machine Frequency naturally:
-  - Hazel's Brotherhood ties give Scribe Galen Portno an instant in-faction hook.
-  - Marvin's self-aware-robot theme mirrors Dr. Trestridge's brain-transfer plot - moral complications baked in.
-  - Bailey's radiation immunity makes Bleakford much more survivable for the party.
-  - Old Tallman and Tommy bring muscle and social glue, respectively.
-
-  Treat the party as the default pregens for that adventure, but the skill stands alone for any Fallout 2d20 game.
 
 ## Picking a character (player-facing prompt)
 

@@ -687,7 +687,7 @@ export function createServer(): McpServer {
   );
 
   // ── Resources: Fallout skills (SEP-2640) ───────────────────────────────
-  // Serves fallout-rpg, fallout-machine-frequency, fallout-character-sheets
+  // Serves fallout-rpg, fallout-character-sheets
   // from ./skills/ as skill:// resources. Also registers skill://index.json
   // and per-skill resource templates for supporting files.
   const skillMap = discoverSkills(SKILLS_DIR);

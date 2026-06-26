@@ -1,8 +1,8 @@
 ---
 name: fallout-rpg
 description: Run, GM, or adjudicate Fallout - The Roleplaying Game (Modiphius 2d20 system, Bethesda's Fallout IP). Use this skill when the user wants to play or look up rules for Fallout RPG / Fallout TTRPG / the Modiphius Fallout tabletop game. Activates for skill tests (rolling 2d20 against attribute+skill target numbers), S.P.E.C.I.A.L. attribute checks, Action Points (AP), Luck points, complications, critical successes, Combat Dice, hit locations, and wasteland gameplay rulings.
-compatibility: Dice rolls are produced by the `fallout-helper` MCP server bundled at `mcp/fallout-helper/`. The skill itself works in any text-only context, but skill tests in the game MUST use a compatible dice-rolling tool or physical dice roll.
-license: See LICENSE.txt
+compatibility: Dice rolls are produced by the `ttrpg-helper` MCP server bundled at `mcp/ttrpg-helper/`. The skill itself works in any text-only context, but skill tests in the game MUST use a compatible dice-rolling tool or physical dice roll.
+license: See LICENSE and NOTICE.md
 metadata:
   version: 0.1.0
   skill_author:
@@ -12,7 +12,7 @@ metadata:
   tools:
     - name: roll_dice
       purpose: Roll a Fallout 2d20 skill test (target = attribute + skill, difficulty = successes needed); drives the Pip-Boy dice UI and reports successes, complications, and AP.
-      ui_resource: ui://fallout-helper/dice-roll.html
+      ui_resource: ui://ttrpg-helper/dice-roll.html
     - name: present_player_choice
       purpose: Pause at a meaningful narrative branch and let the player choose (system-agnostic).
 
@@ -46,7 +46,7 @@ metadata:
     Softworks. Not an official product. Players should buy the core rulebook.
     Fallout, S.P.E.C.I.A.L., Pip-Boy, and related marks are trademarks of
     Bethesda Softworks LLC; 2d20 is a trademark of Modiphius Entertainment.
-    Skill compiled by Ola Hungerford; see LICENSE.txt for license details.
+    Skill compiled by Ola Hungerford; see LICENSE and NOTICE.md for license details.
 ---
 
 # Fallout - The Roleplaying Game
@@ -61,7 +61,7 @@ This skill teaches an agent to GM or adjudicate *Fallout: The Roleplaying Game*.
 - **`references/action-points.md`**: full AP economy - group pool, GM pool, buying d20s with or without AP, AP in combat.
 - **`references/luck.md`**: the four Luck options, regaining Luck.
 - **`references/combat.md`**: Chapter Two — the full combat loop (rounds, initiative, minor/major actions, attacks, hit locations, range, Combat Dice, damage effects, injuries and dying, healing, environment, cover, hazards, traps).
-- **`fallout-helper` MCP server** (in this repo at `mcp/fallout-helper/`): provides the `roll_dice` tool (Pip-Boy-themed animated UI) and the `present_player_choice` tool (host-rendered structured picker for story decisions). Replaces the older Python `roll_test.py` script.
+- **`ttrpg-helper` MCP server** (in this repo at `mcp/ttrpg-helper/`): provides the `roll_dice` tool (Pip-Boy-themed animated UI) and the `present_player_choice` tool (host-rendered structured picker for story decisions). Replaces the older Python `roll_test.py` script.
 
 More chapters (character creation, perks, gear, adventures) will be added as additional reference files.
 
@@ -155,7 +155,7 @@ Load `references/luck.md` for the full description of each option, including whe
 
 ## Bundled MCP tools
 
-The `fallout-helper` MCP server (source at `mcp/fallout-helper/`) exposes a `roll_dice` tool that rolls a skill test with the rules above applied correctly. Call it whenever the agent needs an actual random outcome rather than an illustrative one — do **not** fall back to inline dice math.
+The `ttrpg-helper` MCP server (source at `mcp/ttrpg-helper/`) exposes a `roll_dice` tool that rolls a skill test with the rules above applied correctly. Call it whenever the agent needs an actual random outcome rather than an illustrative one — do **not** fall back to inline dice math.
 
 `roll_dice` arguments:
 
