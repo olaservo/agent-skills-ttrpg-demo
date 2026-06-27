@@ -29,11 +29,9 @@
     "@modelcontextprotocol/ext-apps": "^1.0.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@olaservo/ext-skills": "^0.11.0",
-    "cannon-es": "^0.20.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "marked": "^14.1.4",
-    "three": "^0.181.0",
     "zod": "^4.1.13"
   },
   "devDependencies": {
@@ -41,8 +39,10 @@
     "@types/express": "^5.0.0",
     "@types/node": "22.10.0",
     "@types/three": "^0.181.0",
+    "cannon-es": "^0.20.0",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
+    "three": "^0.181.0",
     "typescript": "^5.9.3",
     "vite": "^6.0.0",
     "vite-plugin-singlefile": "^2.3.0",
