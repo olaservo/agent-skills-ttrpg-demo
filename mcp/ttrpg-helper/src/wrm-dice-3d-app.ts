@@ -369,7 +369,7 @@ function buildScene(): void {
   };
 
   resizeRenderer();
-  requestAnimationFrame(loop);
+  requestRender();
 }
 
 function materialsForDie(role: "initial" | "explode", kept: boolean): THREE.Material[] {
@@ -513,14 +513,26 @@ function spawnDie(cell: DieCell, onRested?: () => void): void {
   };
   paintDie(die, iUp);
   dice.push(die);
+  requestRender();
+}
+
+// The render loop is *demand-driven*: it renders only while a die is animating
+// (or for one-shot redraws — spawn, reset, resize, theme). On the phone target a
+// free-running rAF means continuous WebGL draw + battery drain at idle, so the
+// loop stops itself once every die has rested and restarts via requestRender().
+let rafId = 0;
+function requestRender(): void {
+  if (rafId === 0) rafId = requestAnimationFrame(loop);
 }
 
 function loop(): void {
-  requestAnimationFrame(loop);
+  rafId = 0;
   const now = performance.now();
 
+  let anyPlaying = false;
   for (const die of dice) {
     if (die.state !== "playing") continue;
+    anyPlaying = true;
     const last = die.trajectory.length - 1;
     const idx = Math.min(Math.floor((now - die.playStart) / 1000 / FIXED_STEP), last);
     const f = die.trajectory[idx]!;
@@ -535,6 +547,7 @@ function loop(): void {
   }
 
   renderer.render(scene, camera);
+  if (anyPlaying) requestRender();
 }
 
 function resizeRenderer(): void {
@@ -543,17 +556,25 @@ function resizeRenderer(): void {
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
+  requestRender();
 }
 
 function resetScene(): void {
   for (const die of dice) {
     scene.remove(die.mesh);
-    die.mesh.geometry.dispose();
-    const mats = die.mesh.material as THREE.Material | THREE.Material[];
-    (Array.isArray(mats) ? mats : [mats]).forEach((m) => m.dispose());
+    // Dispose the die mesh *and* any child decorations (the gold edge outline on
+    // explosions / kept 6s) — the child's EdgesGeometry + LineBasicMaterial are
+    // otherwise leaked in the GPU on every reroll.
+    die.mesh.traverse((obj) => {
+      const m = obj as Partial<THREE.Mesh>;
+      m.geometry?.dispose();
+      const mat = m.material as THREE.Material | THREE.Material[] | undefined;
+      if (mat) (Array.isArray(mat) ? mat : [mat]).forEach((x) => x.dispose());
+    });
     world.removeBody(die.body);
   }
   dice = [];
+  requestRender();
 }
 
 const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
