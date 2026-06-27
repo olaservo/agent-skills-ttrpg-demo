@@ -39,7 +39,15 @@ const WRM_SHEET_UI_URI = "ui://ttrpg-helper/wrm-sheet.html";
 // Which dice widget roll_wrm drives. The 2D parchment tray is the shipping
 // default; set WRM_DICE_3D=1 to A/B the experimental Three.js tray. Both
 // resources are always registered — only the tool's pointer flips.
-const WRM_DICE_ACTIVE_URI = process.env.WRM_DICE_3D ? WRM_DICE_3D_UI_URI : WRM_DICE_UI_URI;
+// Match an explicit enable value: a bare `process.env.WRM_DICE_3D` truth test
+// treats "0"/"false" as on (any non-empty string is truthy), so WRM_DICE_3D=0
+// would surprisingly select 3D. Only 1/true/yes/on (any case) enable it.
+function envEnabled(value: string | undefined): boolean {
+  return value !== undefined && ["1", "true", "yes", "on"].includes(value.trim().toLowerCase());
+}
+const WRM_DICE_ACTIVE_URI = envEnabled(process.env.WRM_DICE_3D)
+  ? WRM_DICE_3D_UI_URI
+  : WRM_DICE_UI_URI;
 
 // Slug -> reference filename. Slugs are stable IDs the agent passes to
 // `show_character_sheet`; the numeric prefix on disk just orders the roster.
