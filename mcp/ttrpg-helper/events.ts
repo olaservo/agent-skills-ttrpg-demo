@@ -12,9 +12,11 @@ import type { Response } from "express";
 export interface ToolEvent {
   /**
    * `tool_result` carries a widget payload; `choice_prompt` is a no-widget elicitation
-   * surfaced for display; `transcript` is a spoken/heard line for the live conversation log.
+   * surfaced for display; `transcript` is a spoken/heard line for the live conversation log;
+   * `listen_state` relays the push-to-talk listening state (companion toggle <-> Reachy);
+   * `session_clear` asks Reachy to forget the conversation and start fresh.
    */
-  type: "tool_result" | "choice_prompt" | "transcript";
+  type: "tool_result" | "choice_prompt" | "transcript" | "listen_state" | "session_clear";
   /** Monotonic per-process sequence — the UI uses it as a React key to force a fresh widget per call. */
   seq: number;
   ts: number;
@@ -36,6 +38,11 @@ export interface ToolEvent {
   text?: string;
   /** For `assistant` lines spoken via `speak_as`, the character voice id. */
   voice?: string;
+  // listen_state extras:
+  /** Whether Reachy should be listening (push-to-talk latch on). */
+  enabled?: boolean;
+  /** Listening mode: "always_on" | "push_to_talk". */
+  mode?: string;
 }
 
 const subscribers = new Set<Response>();
@@ -78,4 +85,33 @@ export function publishTranscript(
   voice?: string,
 ): ToolEvent {
   return publishToolEvent({ type: "transcript", toolName: "transcript", role, text, voice });
+}
+
+/**
+ * Push-to-talk listening state, shared between the companion UI toggle and Reachy.
+ * Held in memory so late/reconnecting subscribers (the freshly loaded UI, and Reachy's
+ * SSE listener after a reconnect) can sync via GET /listen-mode.
+ */
+// Passive default until Reachy reports its actual mode on connect.
+const listenState: { enabled: boolean; mode: string } = { enabled: false, mode: "always_on" };
+
+export function getListenState(): { enabled: boolean; mode: string } {
+  return { ...listenState };
+}
+
+/** Update and broadcast the push-to-talk listening state. */
+export function publishListenState(enabled?: boolean, mode?: string): ToolEvent {
+  if (typeof enabled === "boolean") listenState.enabled = enabled;
+  if (typeof mode === "string" && mode) listenState.mode = mode;
+  return publishToolEvent({
+    type: "listen_state",
+    toolName: "listen_state",
+    enabled: listenState.enabled,
+    mode: listenState.mode,
+  });
+}
+
+/** Ask Reachy to forget the current conversation and start a fresh session. */
+export function publishSessionClear(): ToolEvent {
+  return publishToolEvent({ type: "session_clear", toolName: "session_clear" });
 }

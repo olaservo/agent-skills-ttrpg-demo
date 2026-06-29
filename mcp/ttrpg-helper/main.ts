@@ -15,7 +15,14 @@ import type { NextFunction, Request, Response } from "express";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { createServer } from "./server.js";
-import { addSubscriber, removeSubscriber, publishTranscript } from "./events.js";
+import {
+  addSubscriber,
+  removeSubscriber,
+  publishTranscript,
+  publishListenState,
+  getListenState,
+  publishSessionClear,
+} from "./events.js";
 
 // Mirror server.ts: works from source (main.ts) and compiled (dist/index.js).
 const DIST_DIR = import.meta.filename.endsWith(".ts")
@@ -54,7 +61,7 @@ export async function startStreamableHTTPServer(
   // open (static UI shells, no game data). Unset ⇒ no gate (local dev / unguarded). NOTE: interim
   // measure; the principled fix is a per-session room handle (MCP SEP-2567), tracked in the backlog.
   const SECRET = process.env.COMPANION_SECRET?.trim();
-  const GATED = new Set(["/events", "/transcript", "/mcp"]);
+  const GATED = new Set(["/events", "/transcript", "/mcp", "/listen-mode", "/clear-session"]);
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (!SECRET || !GATED.has(req.path)) return next();
     const q = req.query.key;
@@ -101,6 +108,34 @@ export async function startStreamableHTTPServer(
       return;
     }
     publishTranscript(role, t, typeof voice === "string" ? voice : undefined);
+    res.json({ ok: true });
+  });
+
+  // ── Push-to-talk listening state ────────────────────────────────────────
+  // The companion UI toggle POSTs here; Reachy's SSE listener picks up the
+  // broadcast `listen_state` event. GET returns the current state so a freshly
+  // loaded UI (or a reconnecting listener) can sync.
+  app.get("/listen-mode", (_req: Request, res: Response) => {
+    res.json(getListenState());
+  });
+  app.post("/listen-mode", express.json(), (req: Request, res: Response) => {
+    const { enabled, mode } = req.body ?? {};
+    if (enabled !== undefined && typeof enabled !== "boolean") {
+      res.status(400).json({ ok: false, error: "enabled must be a boolean" });
+      return;
+    }
+    const evt = publishListenState(
+      typeof enabled === "boolean" ? enabled : undefined,
+      typeof mode === "string" ? mode : undefined,
+    );
+    res.json({ ok: true, enabled: evt.enabled, mode: evt.mode });
+  });
+
+  // ── Clear chat session ──────────────────────────────────────────────────
+  // The companion UI "clear chat" button POSTs here; Reachy's SSE listener
+  // forgets the conversation and starts fresh.
+  app.post("/clear-session", express.json(), (_req: Request, res: Response) => {
+    publishSessionClear();
     res.json({ ok: true });
   });
 

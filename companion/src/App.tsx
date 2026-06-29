@@ -6,7 +6,9 @@ import { useToolEvents } from "./useToolEvents";
 import { widgetUrl } from "./serverBase";
 import { ChoiceCard } from "./ChoiceCard";
 import { TranscriptPanel } from "./TranscriptPanel";
+import { ControlBar } from "./ControlBar";
 import { applyTheme, gameForTool } from "./theme";
+import { SERVER_BASE, withKey } from "./serverBase";
 import type { ToolEvent } from "./types";
 
 /** Keep the live conversation log from growing without bound. */
@@ -30,6 +32,9 @@ export function App() {
   const [transcript, setTranscript] = useState<ToolEvent[]>([]);
   const [html, setHtml] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  // Push-to-talk listening state, kept in sync with `listen_state` SSE frames.
+  const [listening, setListening] = useState(false);
+  const [listenMode, setListenMode] = useState("always_on");
 
   const htmlCache = useRef<Map<string, string>>(new Map());
   const clientRef = useRef(client);
@@ -44,6 +49,22 @@ export function App() {
     applyTheme("default");
   }, []);
 
+  // Seed the listen toggle from the server's current state on load.
+  useEffect(() => {
+    let active = true;
+    fetch(withKey(`${SERVER_BASE}/listen-mode`))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((s) => {
+        if (!active || !s) return;
+        if (typeof s.enabled === "boolean") setListening(s.enabled);
+        if (typeof s.mode === "string") setListenMode(s.mode);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const onEvent = useCallback((evt: ToolEvent) => {
     // Game-driven theming: a game-specific tool (roll_wrm, show_character_sheet, …) switches
     // the companion's palette to that game. Game-agnostic tools/transcript leave it unchanged.
@@ -53,6 +74,16 @@ export function App() {
       // Independent of the widget/choice/idle view machine — just append to the log,
       // so a spoken line never disturbs the widget currently on screen.
       setTranscript((prev) => [...prev, evt].slice(-MAX_TRANSCRIPT_LINES));
+      return;
+    }
+    if (evt.type === "listen_state") {
+      if (typeof evt.enabled === "boolean") setListening(evt.enabled);
+      if (typeof evt.mode === "string") setListenMode(evt.mode);
+      return;
+    }
+    if (evt.type === "session_clear") {
+      // Reachy is forgetting the conversation — clear the local log to match.
+      setTranscript([]);
       return;
     }
     if (evt.type === "choice_prompt") {
@@ -131,7 +162,14 @@ export function App() {
         }}
       >
         <span>REACHY-DM · companion</span>
-        <span style={{ opacity: 0.7 }}>{client ? "● live" : "○ connecting…"}</span>
+        <span style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <ControlBar
+            listening={listening}
+            mode={listenMode}
+            onClearTranscript={() => setTranscript([])}
+          />
+          <span style={{ opacity: 0.7 }}>{client ? "● live" : "○ connecting…"}</span>
+        </span>
       </header>
 
       {err && (
