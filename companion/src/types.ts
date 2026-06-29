@@ -2,7 +2,7 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 /** Mirrors the server's `ToolEvent` (fallout-helper/events.ts), as JSON over SSE. */
 export interface ToolEvent {
-  type: "tool_result" | "choice_prompt" | "transcript";
+  type: "tool_result" | "choice_prompt" | "transcript" | "listen_state" | "session_clear";
   seq: number;
   ts: number;
   toolName: string;
@@ -20,4 +20,9 @@ export interface ToolEvent {
   text?: string;
   /** Character voice id for `assistant` lines spoken via `speak_as`. */
   voice?: string;
+  // listen_state extras:
+  /** Whether Reachy should be listening (push-to-talk latch on). */
+  enabled?: boolean;
+  /** Listening mode: "always_on" | "push_to_talk". */
+  mode?: string;
 }
