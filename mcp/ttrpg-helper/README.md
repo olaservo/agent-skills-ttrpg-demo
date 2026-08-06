@@ -1,9 +1,9 @@
 # ttrpg-helper-mcp
 
-MCP App server for *Fallout: The Roleplaying Game* (Modiphius 2d20 system). Provides:
+MCP App server for *Fallout: The Roleplaying Game* (Modiphius 2d20 system), built on the v2 MCP TypeScript SDK (`@modelcontextprotocol/server`). Serves both protocol eras: 2025-era clients get a sessionful Streamable HTTP deployment (or legacy stdio openings), and 2026-07-28 clients are routed to a strict modern handler on the same port. Skills ship via the SEP-2640 v1 extension (`skills/list` / `skills/get` with per-file sha256 digest manifests, via `@olaservo/ext-skills`). Provides:
 
 - **`roll_dice`** — server-side 2d20 skill test, with a Pip-Boy-themed animated UI resource.
-- **`present_player_choice`** — pauses the game and surfaces a 2-6 option narrative decision to the human player as a structured form (via MCP elicitation).
+- **`present_player_choice`** — pauses the game and surfaces a 2-6 option narrative decision to the human player as a structured form (MCP elicitation, written in the multi-round-trip `inputRequired` form; the SDK's legacy shim serves 2025-era clients).
 - **`show_character_sheet`** — renders a Fallout pregen (one of six) in a Pip-Boy character sheet UI: name + origin + S.P.E.C.I.A.L. status strip, pixel-art portrait, and the full sheet body (skills / weapons / perks / hit-locations / inventory / biography) sourced from the `fallout-character-sheets` skill.
 
 This server replaces the Python `scripts/roll_test.py` that the `fallout-rpg` agent skill previously shelled out to.
@@ -40,6 +40,8 @@ npm run start           # HTTP transport on http://localhost:3001/mcp
 npm run start:stdio     # stdio transport
 ```
 
+Skills are discovered once at startup (`discoverSkills` snapshots file bytes + sha256 digests so `skills/list` entries always match what `resources/read` returns) — restart the server to pick up on-disk skill edits.
+
 ## Packaging
 
 `npm run pack` builds, prunes to production deps, and produces `ttrpg-helper-mcp.mcpb` at the package root via `@anthropic-ai/mcpb`. The script restores devDependencies after packing.
@@ -66,7 +68,7 @@ Returns `structuredContent` with `rolls`, per-die `annotated` tags, totals, `pas
 | `options` | array of `{ id, label, description? }`, length 2-6 | required | mutually-exclusive choices; ids must be unique |
 | `allowFreeText` | bool | true | adds an optional elaboration text field to the form |
 
-Use at meaningful narrative branches (sneak vs. parley vs. assault), not for mechanical outcomes (those go through `roll_dice`) or pure flavor beats. Issues an MCP `elicitation/create` request — the host renders the form and blocks until the player picks. Returns `structuredContent` with `action: "accept" | "decline" | "cancel"`, plus `chosenId`, `chosenLabel`, and `elaboration` on accept. Falls back with an `isError` result if the connected client doesn't advertise the `elicitation` capability, prompting the agent to ask inline instead.
+Use at meaningful narrative branches (sneak vs. parley vs. assault), not for mechanical outcomes (those go through `roll_dice`) or pure flavor beats. Written once in the multi-round-trip form: the handler returns `input_required` with an embedded form elicitation (titled single-select enum), and the player's answer arrives on re-entry. On 2026-07-28 connections the client auto-fulfils and retries; on 2025-era sessions the SDK's legacy shim issues a real `elicitation/create` (10-minute round timeout) — the host renders the form either way. Returns `structuredContent` with `action: "accept" | "decline" | "cancel"`, plus `chosenId`, `chosenLabel`, and `elaboration` on accept. Falls back with an `isError` result if the connected client doesn't advertise the `elicitation` capability, prompting the agent to ask inline instead.
 
 ### `show_character_sheet`
 
@@ -80,8 +82,13 @@ Reads the matching pregen Markdown from `skills/fallout-ttrpg/fallout-character-
 
 ```
 .
-├── server.ts                # createServer() — registers tools and resources
-├── main.ts                  # entrypoint: stdio or Streamable HTTP
+├── server.ts                # createServer() — registers tools, resources, skills
+├── apps-helpers.ts          # MCP Apps (SEP-1865) server helpers on the v2 SDK
+│                            #   (stand-in for @modelcontextprotocol/ext-apps/server,
+│                            #   which is still v1-SDK-only; the iframe bundles keep
+│                            #   using ext-apps + sdk v1 as devDependencies)
+├── main.ts                  # entrypoint: stdio or Streamable HTTP; routes 2025-era
+│                            #   sessions and 2026-07-28 requests on the same port
 ├── character-parser.ts      # parses pregen Markdown → typed header + body
 ├── character-parser.test.ts
 ├── dice-roll.html           # Vite input → dist/dice-roll.html

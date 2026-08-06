@@ -9,7 +9,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc --noEmit && cross-env INPUT=dice-roll.html vite build && cross-env INPUT=character-sheet.html vite build && cross-env INPUT=wrm-dice.html vite build && cross-env INPUT=wrm-dice-3d.html vite build && cross-env INPUT=wrm-sheet.html vite build && tsc -p tsconfig.server.json && bun build server.ts --outdir dist --target node && bun build main.ts --outfile dist/index.js --target node --external \"./server.js\" --banner \"#!/usr/bin/env node\"",
+    "build": "tsc --noEmit && cross-env INPUT=dice-roll.html vite build && cross-env INPUT=character-sheet.html vite build && cross-env INPUT=wrm-dice.html vite build && cross-env INPUT=wrm-dice-3d.html vite build && cross-env INPUT=wrm-sheet.html vite build && tsc -p tsconfig.server.json && bun build server.ts --outdir dist --target node --packages external && bun build main.ts --outfile dist/index.js --target node --banner \"#!/usr/bin/env node\"",
     "watch:dice": "cross-env INPUT=dice-roll.html vite build --watch",
     "watch:sheet": "cross-env INPUT=character-sheet.html vite build --watch",
     "watch:wrm-dice": "cross-env INPUT=wrm-dice.html vite build --watch",
@@ -26,15 +26,19 @@
     "pack": "npm run build && rm -rf node_modules && npm install --omit=dev --omit=optional && npx --yes @anthropic-ai/mcpb pack . ttrpg-helper-mcp.mcpb; npm install"
   },
   "dependencies": {
-    "@modelcontextprotocol/ext-apps": "^1.0.0",
-    "@modelcontextprotocol/sdk": "^1.29.0",
-    "@olaservo/ext-skills": "^0.11.0",
+    "@modelcontextprotocol/express": "^2.0.0",
+    "@modelcontextprotocol/node": "^2.0.0",
+    "@modelcontextprotocol/server": "^2.0.0",
+    "@olaservo/ext-skills": "^0.12.1",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "marked": "^14.1.4",
-    "zod": "^4.1.13"
+    "zod": "^4.2.0"
   },
   "devDependencies": {
+    "@modelcontextprotocol/client": "^2.0.0",
+    "@modelcontextprotocol/ext-apps": "^1.7.5",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.0",
     "@types/node": "22.10.0",

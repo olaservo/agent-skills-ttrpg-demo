@@ -2,13 +2,27 @@
  * Entry point for the Fallout TTRPG Helper MCP server.
  * Run with: npx ttrpg-helper-mcp [--stdio]
  *   or:     node dist/index.js [--stdio]
+ *
+ * Serves both protocol eras: 2025-era clients (Codex, the phone companion's
+ * v1 SDK client) get the sessionful Streamable HTTP deployment / legacy stdio
+ * openings; 2026-07-28 clients are routed to a strict modern handler
+ * (`isLegacyRequest` decides per request, per the SDK's legacy-routing
+ * pattern).
  */
 
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
+import { createMcpExpressApp } from "@modelcontextprotocol/express";
+import {
+  NodeStreamableHTTPServerTransport,
+  toNodeHandler,
+  toWebRequest,
+} from "@modelcontextprotocol/node";
+import {
+  createMcpHandler,
+  isInitializeRequest,
+  isLegacyRequest,
+} from "@modelcontextprotocol/server";
+import type { McpServer } from "@modelcontextprotocol/server";
+import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import cors from "cors";
 import express from "express";
 import type { NextFunction, Request, Response } from "express";
@@ -45,11 +59,18 @@ export async function startStreamableHTTPServer(
 
   const app = createMcpExpressApp({ host: "0.0.0.0" });
   // Reflect the requesting origin so the phone companion UI (served from a
-  // different port over wifi) can reach both the SSE stream and /mcp.
+  // different port over wifi) can reach both the SSE stream and /mcp. The
+  // exposed headers are the ones a browser-based MCP client must read
+  // (session correlation, auth challenge, resumability, version negotiation).
   app.use(
     cors({
       origin: true,
-      exposedHeaders: ["Mcp-Session-Id"],
+      exposedHeaders: [
+        "Mcp-Session-Id",
+        "WWW-Authenticate",
+        "Last-Event-Id",
+        "Mcp-Protocol-Version",
+      ],
       allowedHeaders: ["*"],
     }),
   );
@@ -149,13 +170,6 @@ export async function startStreamableHTTPServer(
     res.sendFile(path.join(DIST_DIR, name));
   });
 
-  // Stateful StreamableHTTP: one transport (and McpServer) per session, reused
-  // across requests. This preserves the initialize handshake — including the
-  // client's advertised capabilities — so server→client requests like
-  // elicitation (present_player_choice) work. Stateless mode (a fresh server per
-  // request) loses those capabilities and breaks elicitation.
-  const transports = new Map<string, StreamableHTTPServerTransport>();
-
   const onMcpError = (res: Response, error: unknown) => {
     console.error("MCP error:", error);
     if (!res.headersSent) {
@@ -167,86 +181,115 @@ export async function startStreamableHTTPServer(
     }
   };
 
-  // POST — client→server messages (incl. initialize).
-  app.post("/mcp", async (req: Request, res: Response) => {
+  // ── Legacy leg: sessionful Streamable HTTP for 2025-era clients ─────────
+  // One transport (and McpServer) per session, reused across requests. This
+  // preserves the initialize handshake — including the client's advertised
+  // capabilities — so server→client requests like elicitation
+  // (present_player_choice via the legacy input-required shim) work. The
+  // modern leg is per-request by design: 2026-07-28 has no sessions, and its
+  // elicitation rides the multi-round-trip retry instead.
+  const sessions = new Map<string, NodeStreamableHTTPServerTransport>();
+  const handleLegacy = async (req: Request, res: Response) => {
     try {
-      const sessionId = req.headers["mcp-session-id"] as string | undefined;
-      let transport = sessionId ? transports.get(sessionId) : undefined;
-
-      if (!transport) {
-        // Only a fresh initialize may create a new session.
-        if (sessionId || !isInitializeRequest(req.body)) {
-          res.status(400).json({
-            jsonrpc: "2.0",
-            error: { code: -32000, message: "Bad Request: no valid session" },
-            id: null,
-          });
-          return;
-        }
-        const newTransport = new StreamableHTTPServerTransport({
+      const sid = req.headers["mcp-session-id"] as string | undefined;
+      if (sid && sessions.has(sid)) {
+        await sessions.get(sid)!.handleRequest(req, res, req.body);
+      } else if (!sid && isInitializeRequest(req.body)) {
+        const transport = new NodeStreamableHTTPServerTransport({
           sessionIdGenerator: () => randomUUID(),
-          onsessioninitialized: (sid) => transports.set(sid, newTransport),
+          onsessioninitialized: (id) => {
+            sessions.set(id, transport);
+          },
         });
-        newTransport.onclose = () => {
-          if (newTransport.sessionId) transports.delete(newTransport.sessionId);
+        transport.onclose = () => {
+          if (transport.sessionId) sessions.delete(transport.sessionId);
         };
-        await factory().connect(newTransport);
-        transport = newTransport;
+        await factory().connect(transport);
+        await transport.handleRequest(req, res, req.body);
+      } else if (sid) {
+        // Unknown session ID → 404 so the client knows to start a new session.
+        res.status(404).json({
+          jsonrpc: "2.0",
+          error: { code: -32001, message: "Session not found" },
+          id: null,
+        });
+      } else {
+        res.status(400).json({
+          jsonrpc: "2.0",
+          error: { code: -32000, message: "Bad Request: Session ID required" },
+          id: null,
+        });
       }
-
-      await transport.handleRequest(req, res, req.body);
-    } catch (error) {
-      onMcpError(res, error);
-    }
-  });
-
-  // GET — server→client SSE stream (carries elicitation requests). DELETE — end session.
-  const handleSessionRequest = async (req: Request, res: Response) => {
-    const sessionId = req.headers["mcp-session-id"] as string | undefined;
-    const transport = sessionId ? transports.get(sessionId) : undefined;
-    if (!transport) {
-      res.status(400).send("Invalid or missing session ID");
-      return;
-    }
-    try {
-      await transport.handleRequest(req, res);
     } catch (error) {
       onMcpError(res, error);
     }
   };
-  app.get("/mcp", handleSessionRequest);
-  app.delete("/mcp", handleSessionRequest);
+
+  // ── Modern leg: strict 2026-07-28 handler alongside it ──────────────────
+  const modern = createMcpHandler(() => factory(), {
+    legacy: "reject",
+    onerror: (error) => console.error("MCP(modern):", error),
+  });
+  const modernNode = toNodeHandler(modern);
+
+  // POST — routed per request: `isLegacyRequest` is the modern entry's own
+  // classification step exported as a predicate, so routing can't disagree
+  // with it. Express has already parsed the JSON body — pass it along.
+  app.post("/mcp", async (req: Request, res: Response) => {
+    try {
+      const probe = await toWebRequest(req, req.body);
+      if (await isLegacyRequest(probe)) {
+        await handleLegacy(req, res);
+      } else {
+        await modernNode(req, res, req.body);
+      }
+    } catch (error) {
+      onMcpError(res, error);
+    }
+  });
+  // GET (standalone SSE stream, carries legacy elicitation) and DELETE
+  // (explicit session termination) are sessionful-2025-only verbs — straight
+  // to the legacy leg.
+  app.get("/mcp", (req, res) => void handleLegacy(req, res));
+  app.delete("/mcp", (req, res) => void handleLegacy(req, res));
 
   const httpServer = app.listen(port, (err) => {
     if (err) {
       console.error("Failed to start server:", err);
       process.exit(1);
     }
-    console.log(`ttrpg-helper-mcp listening on http://localhost:${port}/mcp`);
+    // stderr, not stdout: in --stdio mode stdout is the protocol channel.
+    console.error(`ttrpg-helper-mcp listening on http://localhost:${port}/mcp`);
   });
 
   const shutdown = () => {
-    console.log("\nShutting down...");
-    httpServer.close(() => process.exit(0));
+    console.error("\nShutting down...");
+    void modern.close().finally(() => {
+      httpServer.close(() => process.exit(0));
+    });
   };
 
   process.on("SIGINT", shutdown);
   process.on("SIGTERM", shutdown);
 }
 
-export async function startStdioServer(factory: () => McpServer): Promise<void> {
-  await factory().connect(new StdioServerTransport());
+export function startStdioServer(factory: () => McpServer): void {
+  // Era-aware stdio: 2025-era clients (Codex) get the legacy handshake
+  // (default `legacy: 'serve'`); 2026-07-28 clients negotiate modern.
+  // serveStdio owns process stdio and may invoke the factory twice on the
+  // probe-fallback path — createServer() is cheap and side-effect-free.
+  serveStdio(() => factory());
 }
 
 async function main() {
   // Always start HTTP so the companion UI has /events + /mcp + /widgets,
-  // regardless of how Codex connects. In --stdio mode we ALSO connect a stdio
-  // transport for Codex; both share the module-level event bus in events.ts.
+  // regardless of how Codex connects. In --stdio mode we ALSO serve a stdio
+  // connection for Codex; both share the module-level event bus in events.ts.
   // (Run only ONE process: standalone HTTP *or* a Codex-spawned --stdio one —
   // never both, or they'd collide on the port and split the bus.)
   await startStreamableHTTPServer(createServer);
   if (process.argv.includes("--stdio")) {
-    await startStdioServer(createServer);
+    startStdioServer(createServer);
   }
 }
 

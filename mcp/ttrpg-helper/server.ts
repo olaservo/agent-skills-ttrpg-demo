@@ -2,14 +2,25 @@ import {
   registerAppResource,
   registerAppTool,
   RESOURCE_MIME_TYPE,
-} from "@modelcontextprotocol/ext-apps/server";
+} from "./apps-helpers.js";
 import {
-  declareSkillsExtension,
   discoverSkills,
   registerSkillResources,
 } from "@olaservo/ext-skills/server";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { CallToolResult, ReadResourceResult } from "@modelcontextprotocol/sdk/types.js";
+import {
+  CLIENT_CAPABILITIES_META_KEY,
+  McpServer,
+  acceptedContent,
+  inputRequired,
+  inputResponse,
+} from "@modelcontextprotocol/server";
+import type {
+  CallToolResult,
+  ClientCapabilities,
+  InputRequiredResult,
+  ReadResourceResult,
+  ServerContext,
+} from "@modelcontextprotocol/server";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
@@ -88,8 +99,8 @@ interface SkillToolDeclaration {
  * Cross-check every skill's `metadata.tools` declaration against the set of
  * tools the server actually registers, logging a warning for any declared tool
  * the server does not provide (typo, renamed/removed tool, wrong server). The
- * declaration itself flows to hosts via `skill://index.json`; this guards drift
- * between what a skillbook asks to load and what this server can supply.
+ * declaration itself flows to hosts via `skills/list` entries; this guards
+ * drift between what a skillbook asks to load and what this server can supply.
  * Returns the list of problem messages (also used in tests).
  */
 export function validateSkillToolDeclarations(
@@ -116,6 +127,44 @@ export function validateSkillToolDeclarations(
   return problems;
 }
 
+// The five tools createServer() registers, for validating skills' declarations.
+const REGISTERED_TOOL_NAMES: ReadonlySet<string> = new Set([
+  "roll_dice",
+  "present_player_choice",
+  "show_character_sheet",
+  "roll_wrm",
+  "show_wrm_character_sheet",
+]);
+
+// Discovered once at module scope: createServer() now runs per modern HTTP
+// request (createMcpHandler) and possibly twice per stdio connection
+// (serveStdio probe fallback), so the factory must stay cheap and
+// side-effect-free. discoverSkills() snapshots file bytes + SHA-256 digests;
+// on-disk skill edits take effect on server restart.
+const SKILL_MAP = discoverSkills(SKILLS_DIR);
+validateSkillToolDeclarations(SKILL_MAP, REGISTERED_TOOL_NAMES);
+
+/**
+ * Whether the connected client can answer a form-mode elicitation. Modern
+ * (2026-07-28) requests carry the client capabilities in the per-request _meta
+ * envelope; 2025-era sessions expose them via the initialize handshake. A bare
+ * `elicitation: {}` declaration counts as form support (pre-2025-11-25
+ * clients never mention modes).
+ */
+function clientSupportsFormElicitation(server: McpServer, ctx: ServerContext): boolean {
+  // The published declarations type the envelope's known keys away ({} —
+  // they promote into _meta's string-indexed slot), so index via Record.
+  const envelope = ctx.mcpReq.envelope as Record<string, unknown> | undefined;
+  const caps =
+    (envelope?.[CLIENT_CAPABILITIES_META_KEY] as ClientCapabilities | undefined) ??
+    server.server.getClientCapabilities();
+  const elicitation = caps?.elicitation;
+  return (
+    elicitation !== undefined &&
+    (Object.keys(elicitation).length === 0 || "form" in elicitation)
+  );
+}
+
 export function createServer(): McpServer {
   const server = new McpServer(
     {
@@ -126,17 +175,11 @@ export function createServer(): McpServer {
       capabilities: {
         resources: {},
       },
+      // Tabletop players deliberate — give the legacy elicitation shim 10
+      // minutes per round (matches this SDK's default, pinned for clarity).
+      inputRequired: { roundTimeoutMs: 600_000 },
     },
   );
-
-  // SEP-2640 §Capability Declaration. Must run before server.connect().
-  // directoryRead: we implement resources/directory/read so skill references +
-  // voices.json travel on install (not just SKILL.md). Requires ext-skills >= 0.11.0.
-  declareSkillsExtension(server.server, { directoryRead: true });
-
-  // Names of every tool we register, so we can validate each skill's
-  // `metadata.tools` declaration against what the server actually provides.
-  const registeredToolNames = new Set<string>();
 
   // ── Tool: roll_dice ────────────────────────────────────────────────────
   registerAppTool(
@@ -148,7 +191,7 @@ export function createServer(): McpServer {
         "Roll a Fallout 2d20 skill test (Modiphius system). " +
         "target = attribute + skill, difficulty = successes needed. " +
         "Use numDice=1 for assistance / group-helper rolls.",
-      inputSchema: {
+      inputSchema: z.object({
         target: z
           .number()
           .int()
@@ -176,8 +219,8 @@ export function createServer(): McpServer {
           .default(1)
           .describe("Complication range. 1 = only on a 20, 5 = on 16-20."),
         seed: z.number().int().optional().describe("Optional RNG seed for reproducible rolls."),
-      },
-      outputSchema: {
+      }),
+      outputSchema: z.object({
         target: z.number(),
         difficulty: z.number(),
         numDice: z.number(),
@@ -194,7 +237,7 @@ export function createServer(): McpServer {
         complications: z.number(),
         passed: z.boolean(),
         apGenerated: z.number(),
-      },
+      }),
       _meta: { ui: { resourceUri: DICE_UI_URI } },
     },
     async (args): Promise<CallToolResult> => {
@@ -221,12 +264,18 @@ export function createServer(): McpServer {
       };
     },
   );
-  registeredToolNames.add("roll_dice");
 
   // ── Tool: present_player_choice ────────────────────────────────────────
   // No UI iframe: elicitation forms are rendered by the *client*. So we
   // register with the plain McpServer API rather than registerAppTool
   // (which mandates a `_meta.ui.resourceUri` pointing at a UI resource).
+  //
+  // Written in the multi-round-trip (MRTR) form: round 1 returns
+  // `inputRequired(...)`; the answer arrives on re-entry via
+  // `ctx.mcpReq.inputResponses`. On 2026-07-28 connections the client
+  // fulfils the embedded request and retries; on 2025-era sessions the SDK's
+  // legacy shim converts it to a real `elicitation/create` and re-enters the
+  // same handler — one implementation serves both eras.
   server.registerTool(
     "present_player_choice",
     {
@@ -237,7 +286,7 @@ export function createServer(): McpServer {
         "at meaningful narrative branches (e.g. sneak vs. parley vs. assault) — not for " +
         "mechanical outcomes (those are skill tests via roll_dice), pure flavor beats, or " +
         "fully open 'what do you do?' prompts.",
-      inputSchema: {
+      inputSchema: z.object({
         prompt: z
           .string()
           .min(1)
@@ -264,15 +313,15 @@ export function createServer(): McpServer {
           .describe(
             "If true, the form includes an optional free-text field so the player can elaborate or propose something off-menu.",
           ),
-      },
-      outputSchema: {
+      }),
+      outputSchema: z.object({
         action: z.enum(["accept", "decline", "cancel"]),
         chosenId: z.string().optional(),
         chosenLabel: z.string().optional(),
         elaboration: z.string().optional(),
-      },
+      }),
     },
-    async (args): Promise<CallToolResult> => {
+    async (args, ctx): Promise<CallToolResult | InputRequiredResult> => {
       const { prompt, options, allowFreeText } = args;
 
       // Reject duplicate ids early — enum values must be unique.
@@ -286,104 +335,114 @@ export function createServer(): McpServer {
         };
       }
 
-      // Surface the pending choice on companion screens *before* elicitInput
-      // blocks. The phone shows it for the table; the player still answers via
-      // the host's elicitation (Codex terminal / out loud), not the phone.
-      publishToolEvent({
-        type: "choice_prompt",
-        toolName: "present_player_choice",
-        prompt,
-        options,
-      });
-
-      const optionsList = options
-        .map((o) => `• ${o.label}${o.description ? ` — ${o.description}` : ""}`)
-        .join("\n");
-      const message = `${prompt}\n\nOptions:\n${optionsList}`;
-
-      const choiceSchema = {
-        type: "string" as const,
-        title: "Your choice",
-        enum: ids,
-        enumNames: options.map((o) => o.label),
-      };
-      const elaborationSchema = {
-        type: "string" as const,
-        title: "Anything to add? (optional)",
-        description: "Free-form elaboration, or propose something off-menu.",
-      };
-
-      try {
-        const result = await server.server.elicitInput(
-          {
-            message,
-            requestedSchema: {
-              type: "object",
-              properties: allowFreeText
-                ? { choice: choiceSchema, elaboration: elaborationSchema }
-                : { choice: choiceSchema },
-              required: ["choice"],
-            },
-          },
-          {
-            // Tabletop players deliberate — give them 10 minutes before the
-            // choice times out (SDK default is only 60s) and falls back to inline.
-            timeout: 600_000,
-          },
-        );
-
-        if (result.action === "accept" && result.content) {
-          const chosenId = result.content.choice as string;
-          const chosenOption = options.find((o) => o.id === chosenId);
-          const chosenLabel = chosenOption?.label ?? chosenId;
-          const elaboration =
-            typeof result.content.elaboration === "string" && result.content.elaboration.length > 0
-              ? result.content.elaboration
-              : undefined;
-
-          const text = elaboration
-            ? `Player chose: ${chosenLabel}\n\nElaboration: ${elaboration}`
-            : `Player chose: ${chosenLabel}`;
-
-          return {
-            content: [{ type: "text", text }],
-            structuredContent: {
-              action: "accept",
-              chosenId,
-              chosenLabel,
-              ...(elaboration ? { elaboration } : {}),
-            },
-          };
-        }
-
-        // decline or cancel — no content
+      // ── Rounds 2+: the player's answer (or refusal) came back ──────────
+      const view = inputResponse(ctx.mcpReq.inputResponses, "choice");
+      if (view.kind === "elicit" && view.action !== "accept") {
         const text =
-          result.action === "decline"
+          view.action === "decline"
             ? "Player declined to commit to one of the options. Don't railroad — narrate a beat that gives them space, then offer a refined choice."
             : "Player dismissed the choice. Don't railroad — revisit the moment with the player.";
         return {
           content: [{ type: "text", text }],
-          structuredContent: { action: result.action },
+          structuredContent: { action: view.action },
         };
-      } catch (error) {
-        // Most likely cause: the connected client doesn't advertise the
-        // `elicitation` capability. Fall back to inline questioning.
-        const msg = error instanceof Error ? error.message : String(error);
+      }
+      // The shim doesn't validate responses against requestedSchema — the
+      // schema-aware overload does, so mistyped/foreign content reads as
+      // "no answer yet" and the request is re-issued below.
+      const answer = acceptedContent(
+        ctx.mcpReq.inputResponses,
+        "choice",
+        z.object({
+          choice: z.enum(ids as [string, ...string[]]),
+          elaboration: z.string().optional(),
+        }),
+      );
+      if (answer !== undefined) {
+        const chosenOption = options.find((o) => o.id === answer.choice);
+        const chosenLabel = chosenOption?.label ?? answer.choice;
+        const elaboration =
+          typeof answer.elaboration === "string" && answer.elaboration.length > 0
+            ? answer.elaboration
+            : undefined;
+        const text = elaboration
+          ? `Player chose: ${chosenLabel}\n\nElaboration: ${elaboration}`
+          : `Player chose: ${chosenLabel}`;
+        return {
+          content: [{ type: "text", text }],
+          structuredContent: {
+            action: "accept",
+            chosenId: answer.choice,
+            chosenLabel,
+            ...(elaboration ? { elaboration } : {}),
+          },
+        };
+      }
+
+      // ── Round 1: no answer yet ─────────────────────────────────────────
+      // Graceful fallback when the connected client can't render a form —
+      // beats the era gate's -32021 / the shim's generic refusal text.
+      if (!clientSupportsFormElicitation(server, ctx)) {
         return {
           content: [
             {
               type: "text",
               text:
-                `present_player_choice failed (${msg}). The connected client may not support ` +
-                `MCP elicitation. Ask the player inline in chat instead, listing the options.`,
+                "present_player_choice: the connected client does not support MCP " +
+                "elicitation. Ask the player inline in chat instead, listing the options.",
             },
           ],
           isError: true,
         };
       }
+
+      // Surface the pending choice on companion screens. Only on a true first
+      // round (kind 'missing'): the handler re-runs on every MRTR round, and
+      // publishing unconditionally would double-fire the phone event.
+      if (view.kind === "missing") {
+        publishToolEvent({
+          type: "choice_prompt",
+          toolName: "present_player_choice",
+          prompt,
+          options,
+        });
+      }
+
+      const optionsList = options
+        .map((o) => `• ${o.label}${o.description ? ` — ${o.description}` : ""}`)
+        .join("\n");
+      return inputRequired({
+        inputRequests: {
+          choice: inputRequired.elicit({
+            message: `${prompt}\n\nOptions:\n${optionsList}`,
+            requestedSchema: {
+              type: "object",
+              properties: {
+                // Titled single-select enum (2025-11-25+); replaces the
+                // deprecated enum+enumNames shape. Labels also stay in the
+                // message text for hosts that render titles poorly.
+                choice: {
+                  type: "string",
+                  title: "Your choice",
+                  oneOf: options.map((o) => ({ const: o.id, title: o.label })),
+                },
+                ...(allowFreeText
+                  ? {
+                      elaboration: {
+                        type: "string" as const,
+                        title: "Anything to add? (optional)",
+                        description: "Free-form elaboration, or propose something off-menu.",
+                      },
+                    }
+                  : {}),
+              },
+              required: ["choice"],
+            },
+          }),
+        },
+      });
     },
   );
-  registeredToolNames.add("present_player_choice");
 
   // ── Tool: show_character_sheet ─────────────────────────────────────────
   registerAppTool(
@@ -399,12 +458,12 @@ export function createServer(): McpServer {
         "old-tallman (Super Mutant philosopher, L2), " +
         "hazel-johnson (Brotherhood Field Scribe, L1), " +
         "marvin (Mister Handy robot, L2).",
-      inputSchema: {
+      inputSchema: z.object({
         characterId: z
           .enum(CHARACTER_IDS)
           .describe("Slug of the pregen to display (one of the six available IDs)."),
-      },
-      outputSchema: {
+      }),
+      outputSchema: z.object({
         characterId: z.string(),
         name: z.string(),
         origin: z.string(),
@@ -421,7 +480,7 @@ export function createServer(): McpServer {
           luk: z.number().int(),
         }),
         markdown: z.string(),
-      },
+      }),
       _meta: { ui: { resourceUri: SHEET_UI_URI } },
     },
     async (args): Promise<CallToolResult> => {
@@ -453,7 +512,6 @@ export function createServer(): McpServer {
       };
     },
   );
-  registeredToolNames.add("show_character_sheet");
 
   // ── Tool: roll_wrm ─────────────────────────────────────────────────────
   // Warrior, Rogue & Mage d6 system: 1d6 + attribute (+2 skill) vs a Difficulty
@@ -470,7 +528,7 @@ export function createServer(): McpServer {
         "applies or when `explode` is set (e.g. damage rolls). Use rollMode 'advantage' for the " +
         "Exceptional Attribute racial talent (2d6 keep highest) and 'disadvantage' for No Talent " +
         "for Magic (2d6 keep lowest). This is NOT the Fallout 2d20 system — use roll_dice for that.",
-      inputSchema: {
+      inputSchema: z.object({
         attribute: z
           .number()
           .int()
@@ -503,8 +561,8 @@ export function createServer(): McpServer {
           .optional()
           .describe("Override exploding (e.g. force on for a damage roll). Default: explodes iff `skill`."),
         seed: z.number().int().optional().describe("Optional RNG seed for reproducible rolls."),
-      },
-      outputSchema: {
+      }),
+      outputSchema: z.object({
         attribute: z.number(),
         skillBonus: z.number(),
         bonus: z.number(),
@@ -519,7 +577,7 @@ export function createServer(): McpServer {
         total: z.number(),
         passed: z.boolean(),
         margin: z.number(),
-      },
+      }),
       _meta: { ui: { resourceUri: WRM_DICE_ACTIVE_URI } },
     },
     async (args): Promise<CallToolResult> => {
@@ -539,7 +597,6 @@ export function createServer(): McpServer {
       };
     },
   );
-  registeredToolNames.add("roll_wrm");
 
   // ── Tool: show_wrm_character_sheet ─────────────────────────────────────
   // Loads a WR&M pregen sheet via its own parser (three attributes, formula
@@ -555,12 +612,12 @@ export function createServer(): McpServer {
         "weapons, spells, inventory, biography). Available: brannic-caldermoor (human knight), " +
         "pip-underbough (halfling burglar), lyrandel-mistweaver (elf mage), durga-ironhand " +
         "(dwarf defender), vashk-bloodmane (orc berserker), aurelia-vane (human cleric/spellblade).",
-      inputSchema: {
+      inputSchema: z.object({
         characterId: z
           .enum(WRM_CHARACTER_IDS)
           .describe("Slug of the pregen to load (one of the six available IDs)."),
-      },
-      outputSchema: {
+      }),
+      outputSchema: z.object({
         characterId: z.string(),
         name: z.string(),
         race: z.string(),
@@ -580,7 +637,7 @@ export function createServer(): McpServer {
         talents: z.array(z.string()),
         spells: z.array(z.string()),
         markdown: z.string(),
-      },
+      }),
       _meta: { ui: { resourceUri: WRM_SHEET_UI_URI } },
     },
     async (args): Promise<CallToolResult> => {
@@ -612,7 +669,6 @@ export function createServer(): McpServer {
       return { content, structuredContent };
     },
   );
-  registeredToolNames.add("show_wrm_character_sheet");
 
   // ── Resource: dice-roll UI ─────────────────────────────────────────────
   registerAppResource(
@@ -722,20 +778,13 @@ export function createServer(): McpServer {
     },
   );
 
-  // ── Resources: Fallout skills (SEP-2640) ───────────────────────────────
-  // Serves fallout-rpg, fallout-character-sheets
-  // from ./skills/ as skill:// resources. Also registers skill://index.json
-  // and per-skill resource templates for supporting files.
-  const skillMap = discoverSkills(SKILLS_DIR);
-  registerSkillResources(server, skillMap, SKILLS_DIR, { directoryRead: true });
-
-  // ── Validate skill tool declarations ───────────────────────────────────
-  // Each SKILL.md may declare the MCP tools it needs in `metadata.tools` (a
-  // list of { name, purpose, ui_resource? }). The full frontmatter is surfaced
-  // to hosts via skill://index.json, so a host loading a skillbook knows which
-  // tools to expect. Here we cross-check that every declared tool is actually
-  // provided by this server and warn on drift (typos, renamed/removed tools).
-  validateSkillToolDeclarations(skillMap, registeredToolNames);
+  // ── Resources + methods: skills (SEP-2640 v1) ──────────────────────────
+  // Serves the skills under ./skills/ as skill:// resources and registers the
+  // skills/list + skills/get handlers (entries carry verbatim frontmatter and
+  // a complete per-file sha256 digest manifest), the resources/directory/read
+  // handler, and declares capabilities.extensions["io.modelcontextprotocol/
+  // skills"] = { directoryRead: true } — all before connect().
+  registerSkillResources(server, SKILL_MAP, SKILLS_DIR, { directoryRead: true });
 
   return server;
 }
