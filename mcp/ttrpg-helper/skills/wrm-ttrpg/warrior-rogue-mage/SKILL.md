@@ -17,27 +17,15 @@ compatibility: |
   tools this skill needs are declared in `metadata.tools` below.
 license: CC-BY-4.0
 metadata:
-  version: 0.2.0
-  author: Ola Hungerford
-  author_url: https://github.com/olaservo
-
-  tools: |
-    roll_wrm - Roll a WR&M check - 1d6 + attribute (+2 if a relevant skill applies) vs a Difficulty Level, meet or beat, with exploding 6s. Supports advantage/disadvantage for the Exceptional Attribute / No Talent for Magic racial talents.
-    present_player_choice - Pause the game at a meaningful narrative branch and let the player choose (system-agnostic).
-
+  version: "0.2.0"
+  author: Ola Hungerford (https://github.com/olaservo)
+  tools: |-
+    roll_wrm: Roll a WR&M check - 1d6 + attribute (+2 if a relevant skill applies) vs a Difficulty Level, meet or beat, with exploding 6s. Supports advantage/disadvantage for the Exceptional Attribute / No Talent for Magic racial talents.
+    present_player_choice: Pause the game at a meaningful narrative branch and let the player choose (system-agnostic).
   scope: "Complete WR&M game system encoded from the CC-BY 3.0 System Reference Document: core mechanics, character creation, skills, talents, combat, magic, equipment, magic items, races, GM guidance, and bestiary."
-
-  sources: |
-    - title: "Warrior, Rogue & Mage - System Reference Document"
-      author: Michael Wolf
-      publisher: Stargazer Games
-      url: https://wrmsrd.opengamingnetwork.com/
-      rights_basis: license_grant
-      license: CC-BY-3.0
-      terms_url: http://creativecommons.org/licenses/by/3.0/
-      covers: "All game mechanics - the three attributes, d6 task resolution, skills and talents, combat, the four-circle magic system and spell list, equipment, magic items, non-human races, GM guidance, and creature stat blocks. Republished by the author under CC-BY 3.0."
-
-  attribution: |
+  sources: |-
+    locator: https://wrmsrd.opengamingnetwork.com/; covers: All game mechanics - the three attributes, d6 task resolution, skills and talents, combat, the four-circle magic system and spell list, equipment, magic items, non-human races, GM guidance, and creature stat blocks, republished by the author under CC-BY 3.0; title: Warrior, Rogue & Mage - System Reference Document; author: Michael Wolf; publisher: Stargazer Games; rights_basis: license_grant; license: CC-BY-3.0; terms_url: http://creativecommons.org/licenses/by/3.0/
+  attribution: |-
     This work is based on Warrior, Rogue & Mage (found at http://www.stargazergames.eu/),
     created by Michael Wolf, and licensed for our use under the Creative Commons Attribution
     3.0 Unported license (http://creativecommons.org/licenses/by/3.0/).
@@ -47,8 +35,7 @@ metadata:
     an official product and not endorsed by Stargazer Games. WR&M is free - please download the
     original rulebook and support the author at https://www.stargazergames.eu/. Skill compiled
     by Ola Hungerford; see ../ATTRIBUTION.md for full licensing details.
-
-  license_note: >
+  license_note: >-
     Our encoding is offered under CC-BY-4.0. The source SRD is CC-BY 3.0 Unported, which
     permits distributing adaptations under a later compatible version; the required CC-BY 3.0
     source credit is carried verbatim above. The Vaneria setting is NOT part of this skill - it

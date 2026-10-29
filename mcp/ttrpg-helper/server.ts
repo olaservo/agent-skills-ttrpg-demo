@@ -88,8 +88,8 @@ const WRM_CHARACTER_SHEETS_DIR = "wrm-ttrpg/wrm-character-sheets/references";
 
 /**
  * The tool names a skill declares it needs, from `metadata.tools` in its
- * SKILL.md: one tool per line, the name first, then an optional ` - purpose`
- * (Agent Skills metadata values must be strings).
+ * SKILL.md: one tool per line as `name (ui://resource): purpose`, the UI
+ * resource and purpose optional (Agent Skills metadata values must be strings).
  */
 export function declaredToolNames(skill: Skill): string[] {
   const metadata = skill.frontmatter.metadata as { tools?: unknown } | undefined;
@@ -97,8 +97,8 @@ export function declaredToolNames(skill: Skill): string[] {
   if (typeof tools !== "string") return [];
   return tools
     .split("\n")
-    .map((line) => line.trim().split(/\s+/)[0] ?? "")
-    .filter((name) => name !== "");
+    .map((line) => /^\s*([A-Za-z0-9_-]+)/.exec(line)?.[1])
+    .filter((name): name is string => name !== undefined);
 }
 
 /**

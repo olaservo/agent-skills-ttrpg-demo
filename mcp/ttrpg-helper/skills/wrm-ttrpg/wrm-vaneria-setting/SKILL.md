@@ -10,28 +10,15 @@ description: >-
   skill for the rules. The setting is a deliberately sparse "sandbox seed" the GM fills in.
 license: CC-BY-NC-SA-4.0
 metadata:
-  version: 0.2.0
-  author: Ola Hungerford
-  author_url: https://github.com/olaservo
-
-  tools: |
-    present_player_choice - Surface a meaningful in-world decision (which city-state to back, parley vs. fight a warlord's troops) as a structured player choice. System-agnostic.
-
+  version: "0.2.0"
+  author: Ola Hungerford (https://github.com/olaservo)
+  tools: |-
+    present_player_choice: Surface a meaningful in-world decision (which city-state to back, parley vs. fight a warlord's troops) as a structured player choice. System-agnostic.
   depends_on: warrior-rogue-mage
-
   scope: "The Fallen Imperium of Vaneria campaign setting - history, gazetteer of the successor city-states, factions, and adventure hooks - encoded from the WR&M Core Rulebook. Pair with warrior-rogue-mage for system rules."
-
-  sources: |
-    - title: "Warrior, Rogue & Mage - Core Rulebook (Revised Edition), Chapter 7: The World"
-      author: Michael Wolf
-      publisher: Stargazer Games
-      year: 2010
-      url: https://www.stargazergames.eu/warrior-rogue-mage/
-      rights_basis: license_grant
-      license: CC-BY-NC-SA-3.0
-      covers: "The Fallen Imperium of Vaneria setting - its history, the gazetteer of successor city-states, and the factions and hooks that flavor them. The setting appears only in the Core Rulebook, not in the CC-BY 3.0 SRD."
-
-  attribution: |
+  sources: |-
+    locator: https://www.stargazergames.eu/warrior-rogue-mage/; covers: The Fallen Imperium of Vaneria setting - its history, the gazetteer of successor city-states, and the factions and hooks that flavor them. The setting appears only in the Core Rulebook, not in the CC-BY 3.0 SRD; title: Warrior, Rogue & Mage - Core Rulebook (Revised Edition), Chapter 7: The World; author: Michael Wolf; publisher: Stargazer Games; year: 2010; rights_basis: license_grant; license: CC-BY-NC-SA-3.0
+  attribution: |-
     Warrior, Rogue & Mage is (c)2010 Michael Wolf. Some rights reserved. All contents of the
     Core Rulebook (aside from the artwork) have been licensed under a Creative Commons BY-NC-SA
     3.0 Germany license. For more information check out www.creativecommons.com and
@@ -42,13 +29,6 @@ metadata:
     under its CC-BY-NC-SA 3.0 license. No artwork or maps are reproduced. Not an official product
     and not endorsed by Stargazer Games. Skill compiled by Ola Hungerford; see ../ATTRIBUTION.md
     for full licensing details.
-
-  license_note: >
-    This skill is licensed CC-BY-NC-SA-4.0 because its source - the Core Rulebook setting - is
-    CC-BY-NC-SA (NonCommercial, ShareAlike), and those terms carry forward to adaptations. This
-    is stricter than the sibling warrior-rogue-mage skill (CC-BY-4.0), whose rules come from the
-    permissively-licensed CC-BY 3.0 SRD. Keep the NC/SA terms on any downstream encoding of this
-    setting.
 ---
 
 # The Fallen Imperium of Vaneria

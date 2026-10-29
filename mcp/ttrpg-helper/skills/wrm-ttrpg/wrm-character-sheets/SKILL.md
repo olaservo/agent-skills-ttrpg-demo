@@ -13,39 +13,20 @@ description: >-
   skill for the rules; the party also fits a Fallen Imperium of Vaneria campaign (wrm-vaneria-setting).
 license: CC-BY-4.0
 metadata:
-  version: 0.2.0
-  author: Ola Hungerford
-  author_url: https://github.com/olaservo
-
-  tools: |
-    show_wrm_character_sheet - Load one of the six pregens by slug (brannic-caldermoor, pip-underbough, lyrandel-mistweaver, durga-ironhand, vashk-bloodmane, aurelia-vane) - returns attributes, derived stats, skills, talents, spells, and biography.
-    roll_wrm - Resolve any check, attack, or save these sheets imply (1d6 + attribute vs DL, exploding 6s). Provided via the warrior-rogue-mage skill.
-
+  version: "0.2.0"
+  author: Ola Hungerford (https://github.com/olaservo)
+  tools: |-
+    show_wrm_character_sheet: Load one of the six pregens by slug (brannic-caldermoor, pip-underbough, lyrandel-mistweaver, durga-ironhand, vashk-bloodmane, aurelia-vane) - returns attributes, derived stats, skills, talents, spells, and biography.
+    roll_wrm: Resolve any check, attack, or save these sheets imply (1d6 + attribute vs DL, exploding 6s). Provided via the warrior-rogue-mage skill.
   depends_on: warrior-rogue-mage
-
   scope: "Six original, balanced pre-generated player characters with full WR&M stats, talents, spells, gear, and biographies. Pair with warrior-rogue-mage for the system."
-
-  sources: |
-    - title: warrior-rogue-mage (sibling skill)
-      publisher: Ola Hungerford
-      url: https://github.com/olaservo/agent-skills-ttrpg-demo/tree/main/mcp/ttrpg-helper/skills/wrm-ttrpg/warrior-rogue-mage
-      relationship: system_encoding
-      rights_basis: license_grant
-      license: CC-BY-4.0
-      covers: "WR&M mechanics (attributes, skills, talents, derived stats, combat, magic, equipment, races) that every sheet uses"
-    - title: "Warrior, Rogue & Mage - System Reference Document"
-      author: Michael Wolf
-      publisher: Stargazer Games
-      url: https://wrmsrd.opengamingnetwork.com/
-      rights_basis: license_grant
-      license: CC-BY-3.0
-      covers: "The underlying game system the characters are built on, via the sibling skill"
-
-  own_contributions: |
-    - Six original pre-generated player characters with full sheets, spells, gear, and biographies
-    - A picker that matches players to characters by play style and party role
-
-  attribution: |
+  sources: |-
+    locator: skill:warrior-rogue-mage; covers: WR&M mechanics (attributes, skills, talents, derived stats, combat, magic, equipment, races) that every sheet uses; title: warrior-rogue-mage (sibling skill); publisher: Ola Hungerford; url: https://github.com/olaservo/agent-skills-ttrpg-demo/tree/main/mcp/ttrpg-helper/skills/wrm-ttrpg/warrior-rogue-mage; relationship: system_encoding; rights_basis: license_grant; license: CC-BY-4.0
+    locator: https://wrmsrd.opengamingnetwork.com/; covers: The underlying game system the characters are built on, via the sibling skill; title: Warrior, Rogue & Mage - System Reference Document; author: Michael Wolf; publisher: Stargazer Games; rights_basis: license_grant; license: CC-BY-3.0
+  own_contributions: |-
+    Six original pre-generated player characters with full sheets, spells, gear, and biographies
+    A picker that matches players to characters by play style and party role
+  attribution: |-
     This work is based on Warrior, Rogue & Mage (found at http://www.stargazergames.eu/),
     created by Michael Wolf, and licensed for our use under the Creative Commons Attribution
     3.0 Unported license (http://creativecommons.org/licenses/by/3.0/).
@@ -54,8 +35,7 @@ metadata:
     CC-BY-4.0, built on the warrior-rogue-mage sibling skill for WR&M mechanics. Unofficial fan
     project, not endorsed by Stargazer Games. WR&M is free - please support the author at
     https://www.stargazergames.eu/. See ../ATTRIBUTION.md for full licensing details.
-
-  license_note: >
+  license_note: >-
     The characters, biographies, and picker logic are the author's own work under CC-BY-4.0. They
     use only WR&M's CC-BY 3.0 mechanics (via the sibling skill); no characters or text from any
     WR&M product are reproduced.

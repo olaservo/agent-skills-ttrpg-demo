@@ -4,36 +4,16 @@ description: Run, GM, or adjudicate Fallout - The Roleplaying Game (Modiphius 2d
 compatibility: Dice rolls are produced by the `ttrpg-helper` MCP server bundled at `mcp/ttrpg-helper/`. The skill itself works in any text-only context, but skill tests in the game MUST use a compatible dice-rolling tool or physical dice roll.
 license: See LICENSE and NOTICE.md
 metadata:
-  version: 0.1.0
-  author: Ola Hungerford
-  author_url: https://github.com/olaservo
-
-  tools: |
-    roll_dice - Roll a Fallout 2d20 skill test (target = attribute + skill, difficulty = successes needed); drives the Pip-Boy dice UI and reports successes, complications, and AP. Renders in ui://ttrpg-helper/dice-roll.html.
-    present_player_choice - Pause at a meaningful narrative branch and let the player choose (system-agnostic).
-
-  sources: |
-    - title: 2d20 System Reference Document
-      publisher: Modiphius Entertainment
-      url: https://www.drivethrurpg.com/en/product/403658/2d20-system-reference-document
-      rights_basis: license_grant
-      terms_url: https://help.drivethrurpg.com/hc/en-us/articles/12723219550871
-      covers: 2d20 mechanics - resolution loop, skill tests, AP economy, complications, Combat Dice
-
-    - title: "Fallout: The Roleplaying Game - Quickstart Guide"
-      publisher: Modiphius Entertainment
-      ip_holder: Bethesda Softworks
-      url: https://modiphius.us/collections/fallout-the-roleplaying-game/products/fallout-the-roleplaying-game-quickstart-guide-pdf-free
-      rights_basis: fair_use_claim
-      covers: Fallout-specific overlays - S.P.E.C.I.A.L. attribute scheme, hit-location chart, sample pregens, Pip-Boy UI theming
-
-    - title: "Fallout: The Roleplaying Game - Core Rulebook"
-      publisher: Modiphius Entertainment
-      ip_holder: Bethesda Softworks
-      rights_basis: fair_use_claim
-      covers: combat chapter detail, full character creation, perks and gear (content not present in the free quickstart)
-
-  attribution: |
+  version: "0.1.0"
+  author: Ola Hungerford (https://github.com/olaservo)
+  tools: |-
+    roll_dice (ui://ttrpg-helper/dice-roll.html): Roll a Fallout 2d20 skill test (target = attribute + skill, difficulty = successes needed); drives the Pip-Boy dice UI and reports successes, complications, and AP.
+    present_player_choice: Pause at a meaningful narrative branch and let the player choose (system-agnostic).
+  sources: |-
+    locator: https://www.drivethrurpg.com/en/product/403658/2d20-system-reference-document; covers: 2d20 mechanics - resolution loop, skill tests, AP economy, complications, Combat Dice; title: 2d20 System Reference Document; publisher: Modiphius Entertainment; rights_basis: license_grant; terms_url: https://help.drivethrurpg.com/hc/en-us/articles/12723219550871
+    locator: https://modiphius.us/collections/fallout-the-roleplaying-game/products/fallout-the-roleplaying-game-quickstart-guide-pdf-free; covers: Fallout-specific overlays - S.P.E.C.I.A.L. attribute scheme, hit-location chart, sample pregens, Pip-Boy UI theming; title: Fallout: The Roleplaying Game - Quickstart Guide; publisher: Modiphius Entertainment; ip_holder: Bethesda Softworks; rights_basis: fair_use_claim
+    locator: https://www.modiphius.net/products/fallout-the-roleplaying-game; covers: combat chapter detail, full character creation, perks and gear (content not present in the free quickstart); title: Fallout: The Roleplaying Game - Core Rulebook; publisher: Modiphius Entertainment; ip_holder: Bethesda Softworks; rights_basis: fair_use_claim
+  attribution: |-
     Unofficial fan project. Mechanics adapted from the 2d20 System Reference
     Document by Modiphius Entertainment (used per the World Builders program's
     mechanics-reuse permission). Fallout-specific elements - S.P.E.C.I.A.L.,
