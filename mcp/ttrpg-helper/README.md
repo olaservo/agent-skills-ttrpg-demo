@@ -1,6 +1,6 @@
 # ttrpg-helper-mcp
 
-MCP App server for *Fallout: The Roleplaying Game* (Modiphius 2d20 system), built on the v2 MCP TypeScript SDK (`@modelcontextprotocol/server`). Serves both protocol eras: 2025-era clients get a sessionful Streamable HTTP deployment (or legacy stdio openings), and 2026-07-28 clients are routed to a strict modern handler on the same port. Skills ship via the SEP-2640 v1 extension (`skills/list` / `skills/get` with per-file sha256 digest manifests, via `@olaservo/ext-skills`). Provides:
+MCP App server for *Fallout: The Roleplaying Game* (Modiphius 2d20 system), built on the v2 MCP TypeScript SDK (`@modelcontextprotocol/server`). Serves both protocol eras: 2025-era clients get a sessionful Streamable HTTP deployment (or legacy stdio openings), and 2026-07-28 clients are routed to a strict modern handler on the same port. Skills ship via the SDK's Skills extension (SEP-2640: `skills/list` / `skills/get` with per-file sha256 digest manifests, `resources/directory/read`, and `ttlMs`/`cacheScope` on 2026-07-28 connections). Provides:
 
 - **`roll_dice`** — server-side 2d20 skill test, with a Pip-Boy-themed animated UI resource.
 - **`present_player_choice`** — pauses the game and surfaces a 2-6 option narrative decision to the human player as a structured form (MCP elicitation, written in the multi-round-trip `inputRequired` form; the SDK's legacy shim serves 2025-era clients).
@@ -40,7 +40,7 @@ npm run start           # HTTP transport on http://localhost:3001/mcp
 npm run start:stdio     # stdio transport
 ```
 
-Skills are discovered once at startup (`discoverSkills` snapshots file bytes + sha256 digests so `skills/list` entries always match what `resources/read` returns) — restart the server to pick up on-disk skill edits.
+Skills are loaded once at startup (`loadSkills` snapshots paths, sizes and sha256 digests; a read whose bytes no longer match the published digest is refused) — restart the server to pick up on-disk skill edits.
 
 ## Packaging
 
