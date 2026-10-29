@@ -6,24 +6,18 @@ description: >-
 license: CC-BY-4.0
 metadata:
   version: 1.0.0
-  skill_author:
-    name: Ola Hungerford
-    url: https://github.com/olaservo
+  author: Ola Hungerford
+  author_url: https://github.com/olaservo
 
-  tools:
-    - name: show_character_sheet
-      purpose: Render one of the six Fallout pregens (augusta-byron, tommy-doyle, bailey-bigsmile, old-tallman, hazel-johnson, marvin) in the Pip-Boy character-sheet UI.
-      ui_resource: ui://ttrpg-helper/character-sheet.html
-    - name: roll_dice
-      purpose: Resolve the 2d20 skill tests these sheets imply; drives the Pip-Boy dice UI.
-      ui_resource: ui://ttrpg-helper/dice-roll.html
+  tools: |
+    show_character_sheet - Render one of the six Fallout pregens (augusta-byron, tommy-doyle, bailey-bigsmile, old-tallman, hazel-johnson, marvin) in the Pip-Boy character-sheet UI. Renders in ui://ttrpg-helper/character-sheet.html.
+    roll_dice - Resolve the 2d20 skill tests these sheets imply; drives the Pip-Boy dice UI. Renders in ui://ttrpg-helper/dice-roll.html.
 
-  depends_on:
-    - fallout-rpg
+  depends_on: fallout-rpg
 
   scope: Six complete Level 1-3 player characters with full stats, gear, perks, and biographies.
 
-  sources:
+  sources: |
     - title: fallout-rpg (sibling skill)
       publisher: Ola Hungerford
       url: https://github.com/olaservo/agent-skills-ttrpg-demo/tree/main/mcp/ttrpg-helper/skills/fallout-ttrpg/fallout-rpg
@@ -42,7 +36,7 @@ metadata:
       covers: Fallout-universe origins and trademark terms used in pregen backgrounds (Brotherhood Initiate, Vault Dweller, Super Mutant, Ghoul, Mister Handy, Pip-Boy)
       notes: No characters, stat blocks, or read-aloud text from the rulebook are reproduced. Only setting vocabulary necessary to place original characters inside the Fallout universe.
 
-  own_contributions:
+  own_contributions: |
     - Six original pre-generated player characters with full sheets, biographies, and inventories
     - Picker logic for matching players to characters by play style
 

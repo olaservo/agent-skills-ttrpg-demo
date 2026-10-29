@@ -18,19 +18,16 @@ compatibility: |
 license: CC-BY-4.0
 metadata:
   version: 0.2.0
-  skill_author:
-    name: Ola Hungerford
-    url: https://github.com/olaservo
+  author: Ola Hungerford
+  author_url: https://github.com/olaservo
 
-  tools:
-    - name: roll_wrm
-      purpose: Roll a WR&M check - 1d6 + attribute (+2 if a relevant skill applies) vs a Difficulty Level, meet or beat, with exploding 6s. Supports advantage/disadvantage for the Exceptional Attribute / No Talent for Magic racial talents.
-    - name: present_player_choice
-      purpose: Pause the game at a meaningful narrative branch and let the player choose (system-agnostic).
+  tools: |
+    roll_wrm - Roll a WR&M check - 1d6 + attribute (+2 if a relevant skill applies) vs a Difficulty Level, meet or beat, with exploding 6s. Supports advantage/disadvantage for the Exceptional Attribute / No Talent for Magic racial talents.
+    present_player_choice - Pause the game at a meaningful narrative branch and let the player choose (system-agnostic).
 
   scope: "Complete WR&M game system encoded from the CC-BY 3.0 System Reference Document: core mechanics, character creation, skills, talents, combat, magic, equipment, magic items, races, GM guidance, and bestiary."
 
-  sources:
+  sources: |
     - title: "Warrior, Rogue & Mage - System Reference Document"
       author: Michael Wolf
       publisher: Stargazer Games

@@ -14,22 +14,18 @@ description: >-
 license: CC-BY-4.0
 metadata:
   version: 0.2.0
-  skill_author:
-    name: Ola Hungerford
-    url: https://github.com/olaservo
+  author: Ola Hungerford
+  author_url: https://github.com/olaservo
 
-  tools:
-    - name: show_wrm_character_sheet
-      purpose: Load one of the six pregens by slug (brannic-caldermoor, pip-underbough, lyrandel-mistweaver, durga-ironhand, vashk-bloodmane, aurelia-vane) - returns attributes, derived stats, skills, talents, spells, and biography.
-    - name: roll_wrm
-      purpose: Resolve any check, attack, or save these sheets imply (1d6 + attribute vs DL, exploding 6s). Provided via the warrior-rogue-mage skill.
+  tools: |
+    show_wrm_character_sheet - Load one of the six pregens by slug (brannic-caldermoor, pip-underbough, lyrandel-mistweaver, durga-ironhand, vashk-bloodmane, aurelia-vane) - returns attributes, derived stats, skills, talents, spells, and biography.
+    roll_wrm - Resolve any check, attack, or save these sheets imply (1d6 + attribute vs DL, exploding 6s). Provided via the warrior-rogue-mage skill.
 
-  depends_on:
-    - warrior-rogue-mage
+  depends_on: warrior-rogue-mage
 
   scope: "Six original, balanced pre-generated player characters with full WR&M stats, talents, spells, gear, and biographies. Pair with warrior-rogue-mage for the system."
 
-  sources:
+  sources: |
     - title: warrior-rogue-mage (sibling skill)
       publisher: Ola Hungerford
       url: https://github.com/olaservo/agent-skills-ttrpg-demo/tree/main/mcp/ttrpg-helper/skills/wrm-ttrpg/warrior-rogue-mage
@@ -45,7 +41,7 @@ metadata:
       license: CC-BY-3.0
       covers: "The underlying game system the characters are built on, via the sibling skill"
 
-  own_contributions:
+  own_contributions: |
     - Six original pre-generated player characters with full sheets, spells, gear, and biographies
     - A picker that matches players to characters by play style and party role
 

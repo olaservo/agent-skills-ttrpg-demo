@@ -11,20 +11,17 @@ description: >-
 license: CC-BY-NC-SA-4.0
 metadata:
   version: 0.2.0
-  skill_author:
-    name: Ola Hungerford
-    url: https://github.com/olaservo
+  author: Ola Hungerford
+  author_url: https://github.com/olaservo
 
-  tools:
-    - name: present_player_choice
-      purpose: Surface a meaningful in-world decision (which city-state to back, parley vs. fight a warlord's troops) as a structured player choice. System-agnostic.
+  tools: |
+    present_player_choice - Surface a meaningful in-world decision (which city-state to back, parley vs. fight a warlord's troops) as a structured player choice. System-agnostic.
 
-  depends_on:
-    - warrior-rogue-mage
+  depends_on: warrior-rogue-mage
 
   scope: "The Fallen Imperium of Vaneria campaign setting - history, gazetteer of the successor city-states, factions, and adventure hooks - encoded from the WR&M Core Rulebook. Pair with warrior-rogue-mage for system rules."
 
-  sources:
+  sources: |
     - title: "Warrior, Rogue & Mage - Core Rulebook (Revised Edition), Chapter 7: The World"
       author: Michael Wolf
       publisher: Stargazer Games

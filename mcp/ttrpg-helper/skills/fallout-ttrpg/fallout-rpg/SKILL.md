@@ -5,18 +5,14 @@ compatibility: Dice rolls are produced by the `ttrpg-helper` MCP server bundled 
 license: See LICENSE and NOTICE.md
 metadata:
   version: 0.1.0
-  skill_author:
-    name: Ola Hungerford
-    url: https://github.com/olaservo
+  author: Ola Hungerford
+  author_url: https://github.com/olaservo
 
-  tools:
-    - name: roll_dice
-      purpose: Roll a Fallout 2d20 skill test (target = attribute + skill, difficulty = successes needed); drives the Pip-Boy dice UI and reports successes, complications, and AP.
-      ui_resource: ui://ttrpg-helper/dice-roll.html
-    - name: present_player_choice
-      purpose: Pause at a meaningful narrative branch and let the player choose (system-agnostic).
+  tools: |
+    roll_dice - Roll a Fallout 2d20 skill test (target = attribute + skill, difficulty = successes needed); drives the Pip-Boy dice UI and reports successes, complications, and AP. Renders in ui://ttrpg-helper/dice-roll.html.
+    present_player_choice - Pause at a meaningful narrative branch and let the player choose (system-agnostic).
 
-  sources:
+  sources: |
     - title: 2d20 System Reference Document
       publisher: Modiphius Entertainment
       url: https://www.drivethrurpg.com/en/product/403658/2d20-system-reference-document

@@ -4,10 +4,6 @@ import {
   RESOURCE_MIME_TYPE,
 } from "./apps-helpers.js";
 import {
-  discoverSkills,
-  registerSkillResources,
-} from "@olaservo/ext-skills/server";
-import {
   CLIENT_CAPABILITIES_META_KEY,
   McpServer,
   acceptedContent,
@@ -21,6 +17,8 @@ import type {
   ReadResourceResult,
   ServerContext,
 } from "@modelcontextprotocol/server";
+import type { Skill } from "@modelcontextprotocol/server/ext/skills";
+import { loadSkills } from "@modelcontextprotocol/server/ext/skills/node";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
@@ -88,11 +86,19 @@ type WrmCharacterId = keyof typeof WRM_CHARACTERS;
 const WRM_CHARACTER_IDS = Object.keys(WRM_CHARACTERS) as [WrmCharacterId, ...WrmCharacterId[]];
 const WRM_CHARACTER_SHEETS_DIR = "wrm-ttrpg/wrm-character-sheets/references";
 
-/** A tool a skill declares it needs, under `metadata.tools` in its SKILL.md. */
-interface SkillToolDeclaration {
-  name: string;
-  purpose?: string;
-  ui_resource?: string;
+/**
+ * The tool names a skill declares it needs, from `metadata.tools` in its
+ * SKILL.md: one tool per line, the name first, then an optional ` - purpose`
+ * (Agent Skills metadata values must be strings).
+ */
+export function declaredToolNames(skill: Skill): string[] {
+  const metadata = skill.frontmatter.metadata as { tools?: unknown } | undefined;
+  const tools = metadata?.tools;
+  if (typeof tools !== "string") return [];
+  return tools
+    .split("\n")
+    .map((line) => line.trim().split(/\s+/)[0] ?? "")
+    .filter((name) => name !== "");
 }
 
 /**
@@ -104,20 +110,15 @@ interface SkillToolDeclaration {
  * Returns the list of problem messages (also used in tests).
  */
 export function validateSkillToolDeclarations(
-  skillMap: ReturnType<typeof discoverSkills>,
+  skills: readonly Skill[],
   registeredToolNames: ReadonlySet<string>,
 ): string[] {
   const problems: string[] = [];
-  for (const skill of skillMap.values()) {
-    const metadata = skill.frontmatter.metadata as { tools?: unknown } | undefined;
-    const tools = metadata?.tools;
-    if (!Array.isArray(tools)) continue;
-    for (const entry of tools as Array<string | SkillToolDeclaration>) {
-      const name = typeof entry === "string" ? entry : entry?.name;
-      if (typeof name !== "string" || !name) continue;
+  for (const skill of skills) {
+    for (const name of declaredToolNames(skill)) {
       if (!registeredToolNames.has(name)) {
         const msg =
-          `[skills] Skill "${skill.name}" declares tool "${name}" in metadata.tools, but this ` +
+          `[skills] Skill "${skill.frontmatter.name}" declares tool "${name}" in metadata.tools, but this ` +
           `server registers no such tool. Registered: ${[...registeredToolNames].sort().join(", ")}`;
         console.error(msg);
         problems.push(msg);
@@ -136,13 +137,14 @@ const REGISTERED_TOOL_NAMES: ReadonlySet<string> = new Set([
   "show_wrm_character_sheet",
 ]);
 
-// Discovered once at module scope: createServer() now runs per modern HTTP
-// request (createMcpHandler) and possibly twice per stdio connection
-// (serveStdio probe fallback), so the factory must stay cheap and
-// side-effect-free. discoverSkills() snapshots file bytes + SHA-256 digests;
-// on-disk skill edits take effect on server restart.
-const SKILL_MAP = discoverSkills(SKILLS_DIR);
-validateSkillToolDeclarations(SKILL_MAP, REGISTERED_TOOL_NAMES);
+// Loaded once at module scope: createServer() runs per modern HTTP request
+// (createMcpHandler) and possibly twice per stdio connection (serveStdio
+// probe fallback), so the factory must stay cheap and side-effect-free.
+// loadSkills() snapshots paths, sizes and SHA-256 digests; each read goes to
+// disk and is refused if the bytes no longer match the published digest.
+// On-disk skill edits take effect on server restart.
+const SKILLS = await loadSkills(SKILLS_DIR);
+validateSkillToolDeclarations(SKILLS.entries, REGISTERED_TOOL_NAMES);
 
 /**
  * Whether the connected client can answer a form-mode elicitation. Modern
@@ -778,13 +780,14 @@ export function createServer(): McpServer {
     },
   );
 
-  // ── Resources + methods: skills (SEP-2640 v1) ──────────────────────────
-  // Serves the skills under ./skills/ as skill:// resources and registers the
-  // skills/list + skills/get handlers (entries carry verbatim frontmatter and
-  // a complete per-file sha256 digest manifest), the resources/directory/read
-  // handler, and declares capabilities.extensions["io.modelcontextprotocol/
-  // skills"] = { directoryRead: true } — all before connect().
-  registerSkillResources(server, SKILL_MAP, SKILLS_DIR, { directoryRead: true });
+  // ── Resources + methods: skills (SEP-2640) ─────────────────────────────
+  // Serves the skills under ./skills/ as skill:// resources and registers
+  // skills/list + skills/get (entries carry verbatim frontmatter and a
+  // complete per-file sha256 digest manifest) and resources/directory/read,
+  // and declares capabilities.extensions["io.modelcontextprotocol/skills"]
+  // = { directoryRead: true } — all before connect(). On 2026-07-28
+  // connections the results also carry ttlMs/cacheScope (default 0/private).
+  SKILLS.attach(server);
 
   return server;
 }
